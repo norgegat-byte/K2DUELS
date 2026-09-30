@@ -2548,7 +2548,7 @@ local function fn23()
 	ImageLabel.BackgroundTransparency = 1
 	ImageLabel.BorderSizePixel = 0
 	ImageLabel.ScaleType = Enum.ScaleType.Crop
-	ImageLabel.ImageTransparency = Config._theme and Config._theme.index == 6 and 0.82 or 0.74
+	ImageLabel.ImageTransparency = 0.94
 	ImageLabel.ZIndex = 301
 	new("UICorner", ImageLabel).CornerRadius = flag4 and (udim(0, 8)) or (udim(1, 0))
 	local Frame2 = new("Frame", Frame)
@@ -2568,7 +2568,7 @@ local function fn23()
 		if ImageLabel and ImageLabel.Parent then
 			ImageLabel.Image = currentBackgroundAsset or ""
 			ImageLabel.Visible = visible
-			ImageLabel.ImageTransparency = Config._theme and Config._theme.index == 6 and 0.82 or 0.74
+			ImageLabel.ImageTransparency = 0.94
 		end
 		if Frame2 and Frame2.Parent then
 			Frame2.Visible = visible
@@ -2897,7 +2897,7 @@ local function fn25()
 	ImageLabel.BackgroundTransparency = 1
 	ImageLabel.BorderSizePixel = 0
 	ImageLabel.Image = Config._currentBackgroundAsset or ""
-	ImageLabel.ImageTransparency = Config._theme and Config._theme.index == 6 and 0.86 or 0.78
+	ImageLabel.ImageTransparency = 0.94
 	ImageLabel.ScaleType = Enum.ScaleType.Crop
 	ImageLabel.ZIndex = 100
 	new("UICorner", ImageLabel).CornerRadius = udim(1, 0)
@@ -2916,7 +2916,7 @@ local function fn25()
 		if ImageLabel and ImageLabel.Parent then
 			ImageLabel.Image = Config._currentBackgroundAsset or ""
 			ImageLabel.Visible = ImageLabel.Image ~= ""
-			ImageLabel.ImageTransparency = Config._theme and Config._theme.index == 6 and 0.86 or 0.78
+			ImageLabel.ImageTransparency = 0.94
 		end
 	end
 	local function fn26(name, text, textSize, arg, arg2, textColor3, font, textXAlignment)
@@ -9317,25 +9317,26 @@ tbl31 = {
 		local function fn66()
 			Config.bgMode = "image"
 			if v20 then
+				-- Keep optional bg art as a faint watermark only (no busy tree overlay)
 				TweenService:Create(
 					v20,
 					TweenInfo.new(0.2, Enum.EasingStyle.Quint),
-					{ ImageTransparency = Config._theme and Config._theme.index == 6 and 0.42 or 0.32 }
+					{ ImageTransparency = 0.94 }
 				):Play()
 			end
 			if frame then
 				TweenService
 					:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
-						BackgroundTransparency = 0.22,
+						BackgroundTransparency = 0.06,
 						BackgroundColor3 = Config._theme.active and Config._theme.active.bg
-							or (Color3.fromRGB(20, 20, 23)),
+							or (Color3.fromRGB(8, 12, 22)),
 					})
 					:Play()
 			end
 			for i, v42 in ipairs(tbl43) do
 				if v42 and v42.Parent then
 					TweenService
-						:Create(v42, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.24 })
+						:Create(v42, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.10 })
 						:Play()
 				end
 			end
@@ -9424,16 +9425,16 @@ tbl31 = {
 		png, png2, v24 = nil, nil, nil
 		_mainLogoImage = nil
 		local glass = {
-			bg = Color3.fromRGB(8, 12, 22),
-			top = Color3.fromRGB(14, 22, 38),
-			side = Color3.fromRGB(12, 18, 32),
-			panel = Color3.fromRGB(22, 34, 54),
-			panelHover = Color3.fromRGB(38, 58, 88),
-			border = Color3.fromRGB(110, 170, 220),
-			accent = Color3.fromRGB(185, 225, 255),
-			accent2 = Color3.fromRGB(120, 185, 235),
-			text = Color3.fromRGB(235, 245, 255),
-			muted = Color3.fromRGB(140, 170, 195),
+			bg = Color3.fromRGB(10, 16, 28),
+			top = Color3.fromRGB(16, 26, 44),
+			side = Color3.fromRGB(14, 22, 38),
+			panel = Color3.fromRGB(26, 40, 64),
+			panelHover = Color3.fromRGB(42, 64, 96),
+			border = Color3.fromRGB(120, 180, 230),
+			accent = Color3.fromRGB(190, 230, 255),
+			accent2 = Color3.fromRGB(130, 195, 240),
+			text = Color3.fromRGB(240, 248, 255),
+			muted = Color3.fromRGB(150, 178, 205),
 			tween = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 		}
 		function Config._theme.distance(arg, arg2)
@@ -9960,9 +9961,9 @@ tbl31 = {
 		function mkStroke(arg, color, thickness)
 			local uiStroke = Instance.new("UIStroke", arg)
 			uiStroke.Color = color or glass.border
-			uiStroke.Thickness = thickness or 1
+			uiStroke.Thickness = thickness or 1.1
 			uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-			uiStroke.Transparency = 0.46
+			uiStroke.Transparency = 0.32
 			return uiStroke
 		end
 		function mkSwitch(arg, enabled, arg2)
@@ -10086,7 +10087,7 @@ tbl31 = {
 		frame.Size = UDim2.new(0, 400, 0, 528)
 		frame.Position = fn3(tbl2.main, UDim2.new(0.5, -200, 0.5, -264), 400, 528)
 		frame.BackgroundColor3 = glass.bg
-		frame.BackgroundTransparency = 0.16
+		frame.BackgroundTransparency = 0.06
 		frame.BorderSizePixel = 0
 		frame.Active = true
 		frame.ClipsDescendants = false
@@ -10243,7 +10244,7 @@ tbl31 = {
 		uiGradient.Size = UDim2.new(1, 0, 0, 68)
 		uiGradient.Position = UDim2.new(0, 0, 0, 0)
 		uiGradient.BackgroundColor3 = glass.top
-		uiGradient.BackgroundTransparency = 0.12
+		uiGradient.BackgroundTransparency = 0.04
 		uiGradient.BorderSizePixel = 0
 		uiGradient.Active = true
 		uiGradient.ZIndex = 10
@@ -10826,7 +10827,7 @@ tbl31 = {
 		frame2.Size = UDim2.new(1, -20, 0, 44)
 		frame2.Position = UDim2.new(0, 10, 1, -52)
 		frame2.BackgroundColor3 = glass.side
-		frame2.BackgroundTransparency = 0.2
+		frame2.BackgroundTransparency = 0.08
 		frame2.BorderSizePixel = 0
 		frame2.ZIndex = 10
 		frame2.ClipsDescendants = true
