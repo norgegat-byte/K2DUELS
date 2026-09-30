@@ -1,10 +1,9 @@
 -- ========================================================
--- deobf by /printed best free source and scripts
--- leaked by https://discord.gg/printed
+-- K2 — Winter Edition
+-- discord.gg/k2scripts
 -- ========================================================
 
-print("leaked by https://discord.gg/printed")
-print("deobf by /printed best free source and scripts")
+print("[K2] Winter Edition | discord.gg/k2scripts")
 
 do
 	-- Obfuscated print("deobf by printed")
@@ -72,6 +71,203 @@ local Lighting, MaterialService, CoreGui, SoundService, localPlayer, obj =
 	game:GetService("SoundService"),
 	Players.LocalPlayer,
 	setmetatable({}, { __mode = "k" })
+
+------------------------------------------------------------
+-- K2 WINTER ATMOSPHERE (presentation only — no logic changes)
+------------------------------------------------------------
+local K2_DISCORD = "discord.gg/k2scripts"
+local K2Winter = { snow = {}, conn = nil, gui = nil }
+
+local function k2ParentGui(gui)
+	pcall(function()
+		if gethui then
+			gui.Parent = gethui()
+			return
+		end
+	end)
+	if not gui.Parent then
+		pcall(function()
+			if syn and syn.protect_gui then syn.protect_gui(gui) end
+			gui.Parent = CoreGui
+		end)
+	end
+	if not gui.Parent then
+		gui.Parent = localPlayer:WaitForChild("PlayerGui")
+	end
+end
+
+local function k2WinterAtmosphere()
+	if K2Winter.gui and K2Winter.gui.Parent then return end
+	local sg = Instance.new("ScreenGui")
+	sg.Name = "K2_WinterAtmosphere"
+	sg.IgnoreGuiInset = true
+	sg.ResetOnSpawn = false
+	sg.DisplayOrder = -10
+	sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	k2ParentGui(sg)
+	K2Winter.gui = sg
+
+	-- Night sky gradient
+	local sky = Instance.new("Frame")
+	sky.Name = "Sky"
+	sky.Size = UDim2.fromScale(1, 1)
+	sky.BackgroundColor3 = Color3.fromRGB(6, 10, 20)
+	sky.BorderSizePixel = 0
+	sky.ZIndex = 0
+	sky.Parent = sg
+	local skyGrad = Instance.new("UIGradient")
+	skyGrad.Rotation = 90
+	skyGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(4, 8, 18)),
+		ColorSequenceKeypoint.new(0.45, Color3.fromRGB(12, 22, 40)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 32, 52)),
+	})
+	skyGrad.Parent = sky
+
+	-- Soft moonlight
+	local moon = Instance.new("Frame")
+	moon.Name = "MoonGlow"
+	moon.AnchorPoint = Vector2.new(0.5, 0.5)
+	moon.Position = UDim2.new(0.82, 0, 0.12, 0)
+	moon.Size = UDim2.fromOffset(120, 120)
+	moon.BackgroundColor3 = Color3.fromRGB(200, 220, 255)
+	moon.BackgroundTransparency = 0.82
+	moon.BorderSizePixel = 0
+	moon.ZIndex = 1
+	moon.Parent = sg
+	Instance.new("UICorner", moon).CornerRadius = UDim.new(1, 0)
+
+	-- Distant mountain silhouettes (simple triangles via rotated frames)
+	local function ridge(yScale, h, transparency)
+		local r = Instance.new("Frame")
+		r.Size = UDim2.new(1.2, 0, 0, h)
+		r.Position = UDim2.new(-0.1, 0, yScale, 0)
+		r.BackgroundColor3 = Color3.fromRGB(10, 16, 28)
+		r.BackgroundTransparency = transparency
+		r.BorderSizePixel = 0
+		r.ZIndex = 1
+		r.Rotation = -2
+		r.Parent = sg
+		return r
+	end
+	ridge(0.72, 90, 0.55)
+	ridge(0.78, 70, 0.4)
+	ridge(0.84, 110, 0.25)
+
+	-- Snow layer
+	local snowLayer = Instance.new("Frame")
+	snowLayer.Name = "SnowLayer"
+	snowLayer.Size = UDim2.fromScale(1, 1)
+	snowLayer.BackgroundTransparency = 1
+	snowLayer.ZIndex = 2
+	snowLayer.ClipsDescendants = true
+	snowLayer.Parent = sg
+
+	local SNOW_COUNT = 42
+	for i = 1, SNOW_COUNT do
+		local flake = Instance.new("Frame")
+		local sz = (i % 7 == 0) and math.random(4, 7) or math.random(2, 4)
+		flake.Size = UDim2.fromOffset(sz, sz)
+		flake.Position = UDim2.fromScale(math.random(), math.random() * -0.2)
+		flake.BackgroundColor3 = Color3.fromRGB(230, 240, 255)
+		flake.BackgroundTransparency = math.random(15, 55) / 100
+		flake.BorderSizePixel = 0
+		flake.ZIndex = 2
+		flake.Parent = snowLayer
+		Instance.new("UICorner", flake).CornerRadius = UDim.new(1, 0)
+		table.insert(K2Winter.snow, {
+			obj = flake,
+			speed = 0.04 + math.random() * 0.12,
+			drift = (math.random() - 0.5) * 0.08,
+			x = math.random(),
+			y = math.random() * -0.3,
+			spin = (math.random() - 0.5) * 40,
+		})
+	end
+
+	if K2Winter.conn then K2Winter.conn:Disconnect() end
+	K2Winter.conn = RunService.RenderStepped:Connect(function(dt)
+		dt = math.clamp(dt, 0, 0.05)
+		for _, s in ipairs(K2Winter.snow) do
+			s.y += s.speed * dt
+			s.x += s.drift * dt
+			if s.y > 1.05 then
+				s.y = -0.05
+				s.x = math.random()
+			end
+			if s.x < -0.05 then s.x = 1.05 elseif s.x > 1.05 then s.x = -0.05 end
+			s.obj.Position = UDim2.fromScale(s.x, s.y)
+			s.obj.Rotation = (s.obj.Rotation + s.spin * dt) % 360
+		end
+	end)
+end
+
+local function k2WinterIntro()
+	local sg = Instance.new("ScreenGui")
+	sg.Name = "K2_WinterIntro"
+	sg.IgnoreGuiInset = true
+	sg.ResetOnSpawn = false
+	sg.DisplayOrder = 9999
+	sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	k2ParentGui(sg)
+
+	local veil = Instance.new("Frame")
+	veil.Size = UDim2.fromScale(1, 1)
+	veil.BackgroundColor3 = Color3.fromRGB(4, 8, 16)
+	veil.BackgroundTransparency = 0
+	veil.BorderSizePixel = 0
+	veil.Parent = sg
+
+	local brand = Instance.new("TextLabel")
+	brand.AnchorPoint = Vector2.new(0.5, 0.5)
+	brand.Position = UDim2.fromScale(0.5, 0.44)
+	brand.Size = UDim2.fromOffset(320, 48)
+	brand.BackgroundTransparency = 1
+	brand.Text = "K2"
+	brand.Font = Enum.Font.GothamBlack
+	brand.TextSize = 42
+	brand.TextColor3 = Color3.fromRGB(210, 235, 255)
+	brand.TextTransparency = 1
+	brand.Parent = sg
+
+	local sub = Instance.new("TextLabel")
+	sub.AnchorPoint = Vector2.new(0.5, 0.5)
+	sub.Position = UDim2.fromScale(0.5, 0.54)
+	sub.Size = UDim2.fromOffset(360, 28)
+	sub.BackgroundTransparency = 1
+	sub.Text = K2_DISCORD
+	sub.Font = Enum.Font.GothamBold
+	sub.TextSize = 16
+	sub.TextColor3 = Color3.fromRGB(150, 190, 230)
+	sub.TextTransparency = 1
+	sub.Parent = sg
+
+	local scale = Instance.new("UIScale")
+	scale.Scale = 0.86
+	scale.Parent = brand
+
+	local TI = TweenInfo.new(0.55, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+	local TI2 = TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+	task.spawn(function()
+		task.wait(0.08)
+		TweenService:Create(brand, TI, { TextTransparency = 0 }):Play()
+		TweenService:Create(scale, TI, { Scale = 1 }):Play()
+		task.wait(0.18)
+		TweenService:Create(sub, TI2, { TextTransparency = 0 }):Play()
+		task.wait(0.55)
+		TweenService:Create(brand, TI2, { TextTransparency = 1 }):Play()
+		TweenService:Create(sub, TI2, { TextTransparency = 1 }):Play()
+		TweenService:Create(veil, TweenInfo.new(0.5, Enum.EasingStyle.Sine), { BackgroundTransparency = 1 }):Play()
+		task.wait(0.55)
+		if sg then sg:Destroy() end
+	end)
+end
+
+task.defer(function()
+	pcall(k2WinterAtmosphere)
+	pcall(k2WinterIntro)
+end)
+
 local function fn(arg)
 	if not arg or not arg:IsA("ScreenGui") then
 		return false
@@ -375,7 +571,7 @@ Config = {
 	warningE01Enabled = true,
 	warningE01Scale = 1,
 	bgMode = "image",
-	fontStyle = "VX7 Original",
+	fontStyle = "K2 Winter",
 	billboardScale = 1,
 	statsBarEnabled = true,
 	_getBatTpStuds = function(arg)
@@ -968,52 +1164,52 @@ local tbl13, tbl14, n7, n8, n9, n10, tbl15 =
 		R1 = Vector3.new(-476.16, -6.52, 25.62),
 		R2 = Vector3.new(-483.06, -5.03, 25.48),
 	}, {
-		bg = Color3.fromRGB(24, 24, 27),
-		card = Color3.fromRGB(35, 35, 40),
-		cardBorder = Color3.fromRGB(78, 78, 88),
-		rowBg = Color3.fromRGB(32, 32, 36),
-		rowBorder = Color3.fromRGB(65, 65, 74),
-		accent = Color3.fromRGB(235, 235, 240),
-		accentDim = Color3.fromRGB(130, 130, 140),
-		accentBr = Color3.fromRGB(255, 255, 255),
-		txtMain = Color3.fromRGB(235, 235, 240),
-		txtDim = Color3.fromRGB(145, 145, 155),
+		bg = Color3.fromRGB(8, 12, 22),
+		card = Color3.fromRGB(22, 34, 54),
+		cardBorder = Color3.fromRGB(100, 160, 210),
+		rowBg = Color3.fromRGB(18, 28, 46),
+		rowBorder = Color3.fromRGB(70, 110, 150),
+		accent = Color3.fromRGB(185, 225, 255),
+		accentDim = Color3.fromRGB(120, 170, 210),
+		accentBr = Color3.fromRGB(230, 245, 255),
+		txtMain = Color3.fromRGB(235, 245, 255),
+		txtDim = Color3.fromRGB(140, 170, 195),
 		txtBright = Color3.fromRGB(255, 255, 255),
-		inputBg = Color3.fromRGB(27, 27, 31),
-		inputBorder = Color3.fromRGB(88, 88, 100),
-		inputFocus = Color3.fromRGB(255, 255, 255),
-		inputTxt = Color3.fromRGB(230, 230, 230),
-		pillOff = Color3.fromRGB(55, 55, 64),
-		pillOn = Color3.fromRGB(230, 230, 235),
-		dotOff = Color3.fromRGB(95, 95, 105),
-		dotOn = Color3.fromRGB(255, 255, 255),
-		pillBorder = Color3.fromRGB(125, 125, 138),
-		modeBtnBg = Color3.fromRGB(34, 34, 40),
-		modeBtnBrd = Color3.fromRGB(88, 88, 100),
-		modeBtnTxt = Color3.fromRGB(170, 170, 180),
-		modeBtnActBg = Color3.fromRGB(225, 225, 230),
-		modeBtnActTx = Color3.fromRGB(255, 255, 255),
-		chipBg = Color3.fromRGB(34, 34, 40),
-		chipBorder = Color3.fromRGB(88, 88, 100),
-		chipTxt = Color3.fromRGB(170, 170, 180),
-		btnBg = Color3.fromRGB(34, 34, 40),
-		btnBorder = Color3.fromRGB(82, 82, 94),
-		btnTxt = Color3.fromRGB(200, 200, 210),
-		btnHov = Color3.fromRGB(52, 52, 60),
-		stackBg = Color3.fromRGB(30, 30, 35),
-		stackBrd = Color3.fromRGB(130, 130, 140),
-		stackTxt = Color3.fromRGB(255, 255, 255),
-		stackActBg = Color3.fromRGB(37, 37, 44),
-		stackActBrd = Color3.fromRGB(255, 255, 255),
+		inputBg = Color3.fromRGB(12, 18, 30),
+		inputBorder = Color3.fromRGB(90, 140, 185),
+		inputFocus = Color3.fromRGB(185, 225, 255),
+		inputTxt = Color3.fromRGB(230, 240, 250),
+		pillOff = Color3.fromRGB(40, 55, 75),
+		pillOn = Color3.fromRGB(185, 225, 255),
+		dotOff = Color3.fromRGB(90, 120, 150),
+		dotOn = Color3.fromRGB(220, 240, 255),
+		pillBorder = Color3.fromRGB(110, 160, 200),
+		modeBtnBg = Color3.fromRGB(22, 34, 54),
+		modeBtnBrd = Color3.fromRGB(90, 140, 185),
+		modeBtnTxt = Color3.fromRGB(160, 190, 215),
+		modeBtnActBg = Color3.fromRGB(185, 225, 255),
+		modeBtnActTx = Color3.fromRGB(8, 12, 22),
+		chipBg = Color3.fromRGB(22, 34, 54),
+		chipBorder = Color3.fromRGB(90, 140, 185),
+		chipTxt = Color3.fromRGB(160, 190, 215),
+		btnBg = Color3.fromRGB(22, 34, 54),
+		btnBorder = Color3.fromRGB(100, 155, 200),
+		btnTxt = Color3.fromRGB(210, 230, 250),
+		btnHov = Color3.fromRGB(38, 58, 88),
+		stackBg = Color3.fromRGB(14, 22, 38),
+		stackBrd = Color3.fromRGB(120, 180, 230),
+		stackTxt = Color3.fromRGB(235, 245, 255),
+		stackActBg = Color3.fromRGB(28, 44, 70),
+		stackActBrd = Color3.fromRGB(185, 225, 255),
 		stackActTxt = Color3.fromRGB(255, 255, 255),
-		stackDot = Color3.fromRGB(70, 70, 78),
-		stackDotOn = Color3.fromRGB(255, 255, 255),
-		infoBg = Color3.fromRGB(30, 30, 35),
-		infoBrd = Color3.fromRGB(78, 78, 88),
-		infoTxt = Color3.fromRGB(170, 170, 180),
-		infoVal = Color3.fromRGB(210, 210, 220),
-		infoFill = Color3.fromRGB(220, 220, 225),
-		presetBg = Color3.fromRGB(34, 34, 40),
+		stackDot = Color3.fromRGB(70, 100, 130),
+		stackDotOn = Color3.fromRGB(185, 225, 255),
+		infoBg = Color3.fromRGB(14, 22, 38),
+		infoBrd = Color3.fromRGB(90, 140, 185),
+		infoTxt = Color3.fromRGB(150, 180, 205),
+		infoVal = Color3.fromRGB(210, 230, 250),
+		infoFill = Color3.fromRGB(160, 210, 250),
+		presetBg = Color3.fromRGB(22, 34, 54),
 		presetBrd = Color3.fromRGB(76, 76, 86),
 		presetLoad = Color3.fromRGB(62, 62, 70),
 		presetDel = Color3.fromRGB(82, 82, 92),
@@ -2938,7 +3134,7 @@ local function fn25()
 		currentThemePalette.statsText or (color(255, 255, 255)),
 		currentThemePalette.statsMuted or (color(180, 180, 200)),
 		currentThemePalette.statsAccent or (color(200, 200, 210))
-	fn26("StatsBrand", "VX7 DUELS", 12, 14, 104, statsAccent, Enum.Font.GothamBlack)
+	fn26("StatsBrand", "K2", 12, 14, 104, statsAccent, Enum.Font.GothamBlack)
 	ScreenGui = new("Frame", Frame)
 	ScreenGui.Name = "StatsDivider"
 	ScreenGui.Size = udim22(1, 26)
@@ -2973,7 +3169,7 @@ local function fn25()
 	local StatsValue2 = fn26("StatsValue", "0ms", 11, 217, 58, statsText, gothamBold)
 	StatsValue2.Size = udim22(58, 18)
 	StatsValue2.Position = udim22(217, 19)
-	fn26("StatsDiscord", "discord.gg/vx7hub", 10, 292, 112, statsAccent, gothamBold, Enum.TextXAlignment.Right).AnchorPoint =
+	fn26("StatsDiscord", "discord.gg/k2scripts", 10, 292, 112, statsAccent, gothamBold, Enum.TextXAlignment.Right).AnchorPoint =
 		Vector2.new(0, 0)
 	fn27 = new("Frame", Frame)
 	fn27.Name = "StatsAccentLine"
@@ -3218,9 +3414,8 @@ Config._buildHeadDisplay = function(discord)
 		table.insert(tbl27.brandLabels, textLabel2)
 		return textLabel2
 	end
-	discord = createTextLabel("discord.gg/", 20, UDim2.new(0.5, -107, 0, 0), 100, Enum.TextXAlignment.Right)
-	createTextLabel("v", 20, UDim2.new(0.5, -7, 0, 0), 14, Enum.TextXAlignment.Center)
-	createTextLabel("x7hub", 20, UDim2.new(0.5, 7, 0, 0), 80, Enum.TextXAlignment.Left)
+	discord = createTextLabel("discord.gg/", 18, UDim2.new(0.5, -120, 0, 0), 100, Enum.TextXAlignment.Right)
+	createTextLabel("k2scripts", 18, UDim2.new(0.5, -18, 0, 0), 120, Enum.TextXAlignment.Left)
 	createTextLabel = Instance.new("Frame", frame)
 	createTextLabel.Size = UDim2.new(0.85, 0, 0, 1)
 	createTextLabel.AnchorPoint = Vector2.new(0.5, 0)
@@ -3314,24 +3509,24 @@ end
 Config._theme = {
 	palettes = {
 		fn30({
-			bg = 16119287,
-			top = 15461358,
-			side = 15790323,
-			panel = 15000808,
-			hover = 13684949,
-			border = 2763567,
-			accent = 10264228,
-			accent2 = 6843250,
-			fill = 3158584,
-			fillIdle = 6909302,
-			statsBg = 3553343,
-			statsText = 16053751,
-			statsMuted = 12369862,
-			statsAccent = 14606565,
-			brand = 1579292,
-			text = 1316120,
-			muted = 6053734,
-			contrast = 657932,
+			bg = 527382,
+			top = 923174,
+			side = 791072,
+			panel = 1450550,
+			hover = 2505304,
+			border = 6594770,
+			accent = 12182015,
+			accent2 = 7911915,
+			fill = 10539770,
+			fillIdle = 4615830,
+			statsBg = 791072,
+			statsText = 15463935,
+			statsMuted = 9218755,
+			statsAccent = 11853055,
+			brand = 13166335,
+			text = 15463935,
+			muted = 9218755,
+			contrast = 527382,
 		}),
 		fn30({
 			bg = 854799,
@@ -3495,18 +3690,18 @@ Config._theme = {
 		})),
 	},
 	base = fn30({
-		bg = 1315863,
-		top = 1908001,
-		side = 1710622,
-		panel = 2368553,
-		hover = 3618615,
-		border = 5789784,
-		accent = 15461355,
-		accent2 = 11513775,
-		brand = 15461355,
-		text = 16119285,
-		muted = 10197915,
-		contrast = 1315863,
+		bg = 527382,
+		top = 923174,
+		side = 791072,
+		panel = 1450550,
+		hover = 2505304,
+		border = 6594770,
+		accent = 12182015,
+		accent2 = 7911915,
+		brand = 13166335,
+		text = 15463935,
+		muted = 9218755,
+		contrast = 527382,
 	}),
 	guiNames = {
 		Vx7ModernV2 = true,
@@ -3518,7 +3713,7 @@ Config._theme = {
 	},
 }
 Config._fontStyleOrder = {
-	"VX7 Original",
+	"K2 Winter",
 	"Merriweather",
 	"Builder",
 	"Nunito",
@@ -3574,7 +3769,7 @@ Config._refreshHeadDisplayFont = function()
 	end
 	for i, v20 in ipairs(tbl27.brandLabels or {}) do
 		if v20 and v20.Parent then
-			if Config.fontStyle == "VX7 Original" then
+			if Config.fontStyle == "K2 Winter" then
 				v20.Font = Enum.Font.GothamBlack
 				Config._fontOriginals[v20] = Enum.Font.GothamBlack
 			else
@@ -3583,7 +3778,7 @@ Config._refreshHeadDisplayFont = function()
 		end
 	end
 	if tbl27.speed and tbl27.speed.Parent then
-		if Config.fontStyle == "VX7 Original" then
+		if Config.fontStyle == "K2 Winter" then
 			tbl27.speed.Font = Enum.Font.GothamBold
 			Config._fontOriginals[tbl27.speed] = Enum.Font.GothamBold
 		else
@@ -3748,7 +3943,7 @@ local function fn31()
 		floatScale = Config.floatScale or 0.7,
 		stealBarScale = Config.stealBarScale or 1,
 		stealBarStyle = Config.stealBarStyle or "Compact",
-		fontStyle = Config.fontStyle or "VX7 Original",
+		fontStyle = Config.fontStyle or "K2 Winter",
 		billboardScale = Config.billboardScale or 1,
 		statsBarEnabled = Config.statsBarEnabled ~= false,
 		fovEnabled = Config.fovEnabled or false,
@@ -3830,7 +4025,7 @@ local function fn33()
 		quickLayoutVersion = Config._quickLayoutVersion or 4,
 		lockButtonsEnabled = Config.lockButtonsEnabled or false,
 		uiLocked = Config.uiLocked or false,
-		fontStyle = Config.fontStyle or "VX7 Original",
+		fontStyle = Config.fontStyle or "K2 Winter",
 		billboardScale = Config.billboardScale or 1,
 		statsBarEnabled = Config.statsBarEnabled ~= false,
 		speedKey = tbl11.speed and tbl11.speed.Name or (Config._speedKeyCleared and "_cleared_" or nil),
@@ -9425,17 +9620,17 @@ tbl31 = {
 		png, png2, v24 = nil, nil, nil
 		_mainLogoImage = nil
 		local glass = {
-			bg = Color3.fromRGB(20, 20, 23),
-			top = Color3.fromRGB(29, 29, 33),
-			side = Color3.fromRGB(26, 26, 30),
-			panel = Color3.fromRGB(36, 36, 41),
-			panelHover = Color3.fromRGB(55, 55, 55),
-			border = Color3.fromRGB(88, 88, 88),
-			accent = Color3.fromRGB(235, 235, 235),
-			accent2 = Color3.fromRGB(175, 175, 175),
-			text = Color3.fromRGB(245, 245, 245),
-			muted = Color3.fromRGB(155, 155, 155),
-			tween = TweenInfo.new(0.16, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+			bg = Color3.fromRGB(8, 12, 22),
+			top = Color3.fromRGB(14, 22, 38),
+			side = Color3.fromRGB(12, 18, 32),
+			panel = Color3.fromRGB(22, 34, 54),
+			panelHover = Color3.fromRGB(38, 58, 88),
+			border = Color3.fromRGB(110, 170, 220),
+			accent = Color3.fromRGB(185, 225, 255),
+			accent2 = Color3.fromRGB(120, 185, 235),
+			text = Color3.fromRGB(235, 245, 255),
+			muted = Color3.fromRGB(140, 170, 195),
+			tween = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 		}
 		function Config._theme.distance(arg, arg2)
 			local n18, n19, n20 = arg.R - arg2.R, arg.G - arg2.G, arg.B - arg2.B
@@ -9712,11 +9907,11 @@ tbl31 = {
 							then "white"
 							else if statsBarRoot == "accent" or statsBarRoot == "accent2"
 								then "contrast"
-								else if arg.Text == "VX7 DUELS"
-										or arg.Text == "discord.gg/vx7hub"
+								else if arg.Text == "K2"
+										or arg.Text == "discord.gg/k2scripts"
 										or arg.Text == "discord.gg/"
 										or arg.Text == "v"
-										or arg.Text == "x7hub"
+										or arg.Text == "k2scripts"
 										or arg == tbl27.speed
 									then "brand"
 									else (Config._theme.nearest(
@@ -10343,7 +10538,7 @@ tbl31 = {
 		uiGradient2.BackgroundColor3 = glass.accent
 		uiGradient2.BackgroundTransparency = 0.08
 		uiGradient2.BorderSizePixel = 0
-		uiGradient2.Text = "VX7"
+		uiGradient2.Text = "K2"
 		uiGradient2.TextColor3 = glass.bg
 		uiGradient2.Font = Enum.Font.GothamBlack
 		uiGradient2.TextSize = 12
@@ -10360,7 +10555,7 @@ tbl31 = {
 		uiGradient2.Size = UDim2.new(0, 100, 1, 0)
 		uiGradient2.Position = UDim2.new(0, 60, 0, 0)
 		uiGradient2.BackgroundTransparency = 1
-		uiGradient2.Text = "VX7 DUELS"
+		uiGradient2.Text = "K2"
 		uiGradient2.TextColor3 = glass.text
 		uiGradient2.Font = Enum.Font.GothamBlack
 		uiGradient2.TextSize = 11
@@ -10513,7 +10708,7 @@ tbl31 = {
 		character.BackgroundColor3 = glass.accent
 		character.BackgroundTransparency = 0.06
 		character.BorderSizePixel = 0
-		character.Text = "VX7"
+		character.Text = "K2"
 		character.TextColor3 = glass.bg
 		character.Font = Enum.Font.GothamBlack
 		character.TextSize = 10
@@ -10524,7 +10719,7 @@ tbl31 = {
 		textButton.Size = UDim2.new(0, 72, 0, 18)
 		textButton.Position = UDim2.new(0, 56, 0, 9)
 		textButton.BackgroundTransparency = 1
-		textButton.Text = "VX7 DUELS"
+		textButton.Text = "K2"
 		textButton.RichText = false
 		textButton.TextColor3 = glass.text
 		textButton.Font = Enum.Font.GothamBlack
@@ -17071,7 +17266,7 @@ tbl31 = {
 				textLabel2.TextSize = 12
 				textLabel2.TextXAlignment = Enum.TextXAlignment.Left
 				local tbl56, tbl57, tbl58 =
-					{ "Night", "Sunset", "Tech", "VX7" },
+					{ "Night", "Sunset", "Tech", "K2" },
 					{ "Cyber", "Sakura", "Moonlight", "Heaven", "Lavender Dream" },
 					{}
 				for i, v46 in ipairs(tbl57) do
@@ -17894,7 +18089,7 @@ tbl31 = {
 					{ name = "OUTFIT 4", sub = "Headless", asset = 18902416696 },
 					{ name = "OUTFIT 5", sub = "Local outfit", asset = 13935333090 },
 					{ name = "OUTFIT 6", sub = "Headless", asset = 91274263831244 },
-					{ name = "VX7", sub = "Signature outfit", asset = 76479271580913 },
+					{ name = "K2", sub = "Signature outfit", asset = 76479271580913 },
 					{ name = "NEW SKIN", sub = "Invisible legs - visual only", asset = 82277826177074 },
 				}
 				local skinChangerSelection, skinGalaxyEnabled =
@@ -21808,7 +22003,7 @@ tbl31 = {
 								textLabel3.Position = UDim2.new(0, 36, 0, 26)
 								textLabel3.Size = UDim2.new(1, -80, 0, 14)
 								textLabel3.BackgroundTransparency = 1
-								textLabel3.Text = "VX7 Anti Bat"
+								textLabel3.Text = "K2 Anti Bat"
 								textLabel3.TextColor3 = glass.muted
 								textLabel3.Font = Enum.Font.Gotham
 								textLabel3.TextSize = 11
@@ -22662,7 +22857,7 @@ tbl31 = {
 								frame9.TextXAlignment = Enum.TextXAlignment.Left
 								frame9.ZIndex = 62
 								frame9.TextColor3 = glass.text
-								frame9.Text = "VX7 ANTI BAT"
+								frame9.Text = "K2 ANTI BAT"
 								frame9 = Instance.new("TextLabel", frame7)
 								frame9.Size = UDim2.new(1, -88, 0, 12)
 								frame9.Position = UDim2.new(0, 48, 0, 28)
@@ -23579,7 +23774,7 @@ tbl31 = {
 					textLabel2.TextColor3 = Color3.fromRGB(235, 115, 115)
 					return
 				end
-				textBox2.Text = "VX7CFG1:" .. result
+				textBox2.Text = "K2CFG1:" .. result
 				result = setclipboard or toclipboard
 				ok = if result then (pcall(result, textBox2.Text)) else false
 				textLabel2.Text = ok
@@ -31672,5 +31867,5 @@ Config.carrySpeed = Config.carrySpeed or 16
 
 -- Signal to any keysystem/loader that the hub finished bootstrapping.
 -- (Real core would set this after decrypting the LPH buffer.)
-print("leaked by https://discord.gg/printed")
+print("[K2] Ready | discord.gg/k2scripts")
 _G.VX7_LOADED = true
