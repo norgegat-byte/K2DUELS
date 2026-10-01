@@ -197,356 +197,6 @@ end
 _G.__K2_CONFIG_PATH = "vx7/Vx7Config.json"
 _G.__K2_KEYBINDS_PATH = "vx7/Vx7Keybinds.json"
 
-------------------------------------------------------------
--- K2 CONFIG (SpaceHub-style: flat file, primitives only)
-------------------------------------------------------------
-local K2_CONFIG_FILE = "K2Config.json"
-
-local function k2KeyName(keyObj)
-	if not keyObj then return nil end
-	local ok, name = pcall(function() return keyObj.Name end)
-	if ok and type(name) == "string" then return name end
-	return nil
-end
-
-local function k2BuildConfigTable()
-	local cfg = {
-		-- speeds
-		normalSpeed = tonumber(Config.normalSpeed) or 60,
-		carrySpeed = tonumber(Config.carrySpeed) or 30,
-		laggerSpeed = tonumber(Config.laggerSpeed) or 10.1,
-		normalStealSpeed = tonumber(Config.normalStealSpeed) or 30,
-		laggerStealSpeed = tonumber(Config.laggerStealSpeed) or 10.1,
-		carryStealSpeed = tonumber(Config.carryStealSpeed) or 20,
-		stealRadius = tonumber(tbl17 and tbl17.StealRadius) or 20,
-		stealFreezePercent = tonumber(Config.stealFreezePercent) or 85,
-		uiScale = tonumber(Config.uiScale) or 1,
-		-- toggles
-		infJump = Config.infJumpEnabled == true,
-		antiRagdoll = Config.antiRagdollEnabled == true,
-		antiLag = Config.antiLagEnabled == true,
-		potatoGraphics = Config.potatoGraphicsEnabled == true,
-		medusaCounter = Config.medusaCounterEnabled == true,
-		batAimbotToggled = Config.batAimbotToggled == true,
-		autoSwingEnabled = Config.autoSwingEnabled == true,
-		autoStealEnabled = Config.autoStealEnabled == true,
-		autoStealStopWhenHit = Config.autoStealStopWhenHit == true,
-		autoCarryOnSteal = Config.autoCarrySpeedEnabled ~= false,
-		autoTPDownEnabled = Config.autoTPDownEnabled == true,
-		autoTPDownHeight = tonumber(Config.autoTPDownHeight) or 20,
-		holdJumpEnabled = Config.holdJumpEnabled == true,
-		ragdollTimerEnabled = Config.ragdollTimerEnabled == true,
-		enemyRagdollTimerEnabled = Config.enemyRagdollTimerEnabled == true,
-		autoLeftEnabled = Config.autoLeftEnabled == true,
-		autoRightEnabled = Config.autoRightEnabled == true,
-		dropEnabled = Config.dropEnabled == true,
-		espBoxEnabled = Config.espBoxEnabled == true,
-		espLineEnabled = Config.espLineEnabled == true,
-		espPlayerEnabled = Config.espPlayerEnabled == true,
-		espInfoEnabled = Config.espInfoEnabled == true,
-		unwalkEnabled = Config.unwalkEnabled == true,
-		tryhardAnimEnabled = Config.tryhardAnimEnabled == true,
-		playerAnimEnabled = Config.playerAnimEnabled == true,
-		batCounterEnabled = Config.batCounterEnabled == true,
-		batTpEnabled = Config.batTpEnabled == true,
-		smartBatTpEnabled = Config.smartBatTpEnabled == true,
-		laggerFuncEnabled = Config.laggerFuncEnabled == true,
-		safeModeEnabled = Config.safeModeEnabled ~= false,
-		dropBrainrotMode = Config.dropBrainrotMode == true,
-		batTpNoCollision = Config.batTpNoCollision == true,
-		statsBarEnabled = Config.statsBarEnabled ~= false,
-		skipIntro = Config.skipIntro == true,
-		skipIntroConfigured = Config.skipIntroConfigured == true,
-		uiLocked = Config.uiLocked == true,
-		lockButtonsEnabled = Config.lockButtonsEnabled == true,
-		stackButtonsHidden = Config.stackButtonsHidden == true,
-		fovEnabled = Config.fovEnabled == true,
-		resEnabled = Config.resEnabled == true,
-		silentBatAim = Config.silentBatAim == true,
-		autoLaggerSpd = Config.autoLaggerSpd == true,
-		-- numbers
-		fovValue = tonumber(Config.fovValue) or 80,
-		resFov = tonumber(Config.resFov) or 100,
-		sbaRange = tonumber(Config.sbaRange) or 50,
-		sbaTurnSpeed = tonumber(Config.sbaTurnSpeed) or 30,
-		smartBatTpDistance = tonumber(Config.smartBatTpDistance) or 9,
-		smartBatTpSpeed = tonumber(Config.smartBatTpSpeed) or 42,
-		popupScale = tonumber(Config.popupScale) or 1,
-		floatScale = tonumber(Config.floatScale) or 0.7,
-		stealBarScale = tonumber(Config.stealBarScale) or 1,
-		billboardScale = tonumber(Config.billboardScale) or 1,
-		-- strings
-		autoPlayMode = tostring(Config.autoPlayMode or "full"),
-		autoPlayVersion = tostring(Config.autoPlayVersion or "V2"),
-		batCounterMode = tostring(Config.batCounterMode or "Classic"),
-		autoStealVersion = tostring(Config.autoStealVersion or "V1"),
-		batAimbotVersion = tostring(Config.batAimbotVersion or "Normal"),
-		batTpVersion = tostring(Config.batTpVersion or "V2"),
-		dropType = tostring(Config.dropType or "Jump"),
-		stealBarStyle = tostring(Config.stealBarStyle or "Compact"),
-		buttonShape = tostring(Config.buttonShape or "Square"),
-		fontStyle = tostring(Config.fontStyle or "K2 Winter"),
-		antiRagdollMode = tostring(Config.antiRagdollMode or "V1"),
-		infJumpMode = tostring(Config.infJumpMode or "manual"),
-		laggerMode = tostring(str or Config.laggerMode or "Desktop"),
-		bgMode = tostring(Config.bgMode or "image"),
-		mainBgIndex = tonumber(n13) or 1,
-		-- keybinds (names only)
-		speedKey = (tbl11 and tbl11.speed and k2KeyName(tbl11.speed)) or (Config._speedKeyCleared and "_cleared_" or nil),
-		guiHideKey = (tbl11 and tbl11.guiHide and k2KeyName(tbl11.guiHide)) or "_cleared_",
-		autoPlayKey = tbl11 and k2KeyName(tbl11.autoPlay) or nil,
-		autoLeftKey = tbl11 and k2KeyName(tbl11.autoLeft) or nil,
-		autoRightKey = tbl11 and k2KeyName(tbl11.autoRight) or nil,
-		laggerKey = tbl11 and k2KeyName(tbl11.lagger) or nil,
-		dropKey = tbl11 and k2KeyName(tbl11.drop) or nil,
-		tpDownKey = (tbl11 and k2KeyName(tbl11.tpDown)) or "_cleared_",
-		aimbotKey = tbl11 and k2KeyName(tbl11.aimbot) or nil,
-		laggerFuncKey = tbl11 and k2KeyName(tbl11.laggerFunc) or nil,
-		batLaggerKey = tbl11 and k2KeyName(tbl11.batLagger) or nil,
-		batTpKey = tbl11 and k2KeyName(tbl11.batTp) or nil,
-		smartBatTpKey = tbl11 and k2KeyName(tbl11.smartBatTp) or nil,
-	}
-	return cfg
-end
-
-function k2SaveConfig()
-	local cfg = k2BuildConfigTable()
-	local ok, encoded = pcall(function()
-		return HttpService:JSONEncode(cfg)
-	end)
-	if not ok or type(encoded) ~= "string" then
-		Config._lastSaveOk = false
-		Config._lastSaveErr = "encode failed: " .. tostring(encoded)
-		warn("[K2] " .. Config._lastSaveErr)
-		return false, Config._lastSaveErr
-	end
-	-- Try multiple write paths (flat file first — most reliable)
-	local paths = { K2_CONFIG_FILE, "vx7/K2Config.json", "vx7/Vx7Config.json" }
-	local written = false
-	local lastErr = nil
-	for _, path in ipairs(paths) do
-		-- ensure parent folder if nested
-		if path:find("/") then
-			local folder = path:match("^(.+)/[^/]+$")
-			if folder then
-				pcall(function()
-					local mf = makefolder or (syn and syn.makefolder) or (getgenv() and getgenv().makefolder)
-					if mf then mf(folder) end
-				end)
-			end
-		end
-		local wOk, wErr = pcall(function()
-			local wf = writefile or (syn and syn.writefile) or writefile_ or (getgenv() and getgenv().writefile)
-			if not wf then error("no writefile") end
-			wf(path, encoded)
-		end)
-		if wOk then
-			-- verify
-			local rOk, body = pcall(function()
-				local rf = readfile or (syn and syn.readfile) or readfile_ or (getgenv() and getgenv().readfile)
-				return rf and rf(path)
-			end)
-			if rOk and type(body) == "string" and #body > 10 then
-				written = true
-				getgenv().K2_LastConfig = cfg
-				getgenv().K2_ConfigPath = path
-				Config._lastSaveOk = true
-				Config._lastSaveErr = nil
-				Config._lastSavePath = path
-				return true, path
-			else
-				lastErr = "wrote " .. path .. " but re-read failed"
-			end
-		else
-			lastErr = tostring(wErr)
-		end
-	end
-	Config._lastSaveOk = false
-	Config._lastSaveErr = lastErr or "write failed"
-	warn("[K2] Config save failed:", Config._lastSaveErr)
-	return false, Config._lastSaveErr
-end
-
-function k2LoadConfig()
-	local paths = {
-		getgenv().K2_ConfigPath,
-		K2_CONFIG_FILE,
-		"vx7/K2Config.json",
-		"vx7/Vx7Config.json",
-	}
-	local cfg = nil
-	if type(getgenv().K2_LastConfig) == "table" and next(getgenv().K2_LastConfig) then
-		cfg = getgenv().K2_LastConfig
-	end
-	if not cfg then
-		for _, path in ipairs(paths) do
-			if type(path) ~= "string" then continue end
-			local ok, body = pcall(function()
-				local rf = readfile or (syn and syn.readfile) or readfile_ or (getgenv() and getgenv().readfile)
-				if not rf then return nil end
-				-- skip isfile check — some executors lie
-				return rf(path)
-			end)
-			if ok and type(body) == "string" and #body > 10 then
-				local dOk, decoded = pcall(function()
-					return HttpService:JSONDecode(body)
-				end)
-				if dOk and type(decoded) == "table" then
-					cfg = decoded
-					getgenv().K2_ConfigPath = path
-					break
-				end
-			end
-			end -- type(path)==string
-		end
-	end
-	if type(cfg) ~= "table" then
-		return true -- nothing to load
-	end
-
-	local function num(v, default)
-		v = tonumber(v)
-		return v or default
-	end
-	local function bool(v, default)
-		if type(v) == "boolean" then return v end
-		return default
-	end
-	local function str(v, default)
-		if type(v) == "string" and v ~= "" then return v end
-		return default
-	end
-
-	-- apply speeds
-	Config.normalSpeed = num(cfg.normalSpeed, Config.normalSpeed or 60)
-	Config.carrySpeed = num(cfg.carrySpeed, Config.carrySpeed or 30)
-	Config.laggerSpeed = num(cfg.laggerSpeed, Config.laggerSpeed or 10.1)
-	Config.normalStealSpeed = num(cfg.normalStealSpeed, Config.normalStealSpeed or 30)
-	Config.laggerStealSpeed = num(cfg.laggerStealSpeed, Config.laggerStealSpeed or 10.1)
-	Config.carryStealSpeed = num(cfg.carryStealSpeed, Config.carryStealSpeed or 20)
-	if tbl17 and cfg.stealRadius then tbl17.StealRadius = num(cfg.stealRadius, 20) end
-	Config.stealFreezePercent = num(cfg.stealFreezePercent, 85)
-	Config.uiScale = num(cfg.uiScale, 1)
-	-- toggles
-	Config.infJumpEnabled = bool(cfg.infJump, Config.infJumpEnabled)
-	Config.antiRagdollEnabled = bool(cfg.antiRagdoll, Config.antiRagdollEnabled)
-	Config.antiLagEnabled = bool(cfg.antiLag, Config.antiLagEnabled)
-	Config.potatoGraphicsEnabled = bool(cfg.potatoGraphics, Config.potatoGraphicsEnabled)
-	Config.medusaCounterEnabled = bool(cfg.medusaCounter, Config.medusaCounterEnabled)
-	Config.batAimbotToggled = bool(cfg.batAimbotToggled, Config.batAimbotToggled)
-	Config.autoSwingEnabled = bool(cfg.autoSwingEnabled, Config.autoSwingEnabled)
-	Config.autoStealEnabled = bool(cfg.autoStealEnabled, Config.autoStealEnabled)
-	Config.autoStealStopWhenHit = bool(cfg.autoStealStopWhenHit, false)
-	Config.autoCarrySpeedEnabled = bool(cfg.autoCarryOnSteal, true)
-	Config.autoTPDownEnabled = bool(cfg.autoTPDownEnabled, false)
-	Config.autoTPDownHeight = num(cfg.autoTPDownHeight, 20)
-	Config.holdJumpEnabled = bool(cfg.holdJumpEnabled, Config.holdJumpEnabled)
-	Config.ragdollTimerEnabled = bool(cfg.ragdollTimerEnabled, false)
-	Config.enemyRagdollTimerEnabled = bool(cfg.enemyRagdollTimerEnabled, false)
-	Config.autoLeftEnabled = bool(cfg.autoLeftEnabled, false)
-	Config.autoRightEnabled = bool(cfg.autoRightEnabled, false)
-	Config.dropEnabled = bool(cfg.dropEnabled, false)
-	Config.espBoxEnabled = bool(cfg.espBoxEnabled, Config.espBoxEnabled)
-	Config.espLineEnabled = bool(cfg.espLineEnabled, Config.espLineEnabled)
-	Config.espPlayerEnabled = bool(cfg.espPlayerEnabled, Config.espPlayerEnabled)
-	Config.espInfoEnabled = bool(cfg.espInfoEnabled, Config.espInfoEnabled)
-	Config.unwalkEnabled = bool(cfg.unwalkEnabled, Config.unwalkEnabled)
-	Config.tryhardAnimEnabled = bool(cfg.tryhardAnimEnabled, Config.tryhardAnimEnabled)
-	Config.playerAnimEnabled = bool(cfg.playerAnimEnabled, false)
-	Config.batCounterEnabled = bool(cfg.batCounterEnabled, Config.batCounterEnabled)
-	Config.batTpEnabled = bool(cfg.batTpEnabled, Config.batTpEnabled)
-	Config.smartBatTpEnabled = bool(cfg.smartBatTpEnabled, Config.smartBatTpEnabled)
-	Config.laggerFuncEnabled = bool(cfg.laggerFuncEnabled, Config.laggerFuncEnabled)
-	Config.safeModeEnabled = bool(cfg.safeModeEnabled, true)
-	Config.dropBrainrotMode = bool(cfg.dropBrainrotMode, false)
-	Config.batTpNoCollision = bool(cfg.batTpNoCollision, false)
-	Config.statsBarEnabled = bool(cfg.statsBarEnabled, true)
-	Config.skipIntro = bool(cfg.skipIntro, Config.skipIntro)
-	Config.skipIntroConfigured = bool(cfg.skipIntroConfigured, Config.skipIntroConfigured)
-	Config.uiLocked = bool(cfg.uiLocked, false)
-	Config.lockButtonsEnabled = bool(cfg.lockButtonsEnabled, false)
-	Config.stackButtonsHidden = bool(cfg.stackButtonsHidden, false)
-	Config.fovEnabled = bool(cfg.fovEnabled, false)
-	Config.resEnabled = bool(cfg.resEnabled, false)
-	Config.silentBatAim = bool(cfg.silentBatAim, false)
-	Config.autoLaggerSpd = bool(cfg.autoLaggerSpd, false)
-	-- numbers
-	Config.fovValue = num(cfg.fovValue, 80)
-	Config.resFov = num(cfg.resFov, 100)
-	Config.sbaRange = num(cfg.sbaRange, 50)
-	Config.sbaTurnSpeed = num(cfg.sbaTurnSpeed, 30)
-	Config.smartBatTpDistance = num(cfg.smartBatTpDistance, 9)
-	Config.smartBatTpSpeed = num(cfg.smartBatTpSpeed, 42)
-	Config.popupScale = num(cfg.popupScale, 1)
-	Config.floatScale = num(cfg.floatScale, 0.7)
-	Config.stealBarScale = num(cfg.stealBarScale, 1)
-	Config.billboardScale = num(cfg.billboardScale, 1)
-	-- strings
-	Config.autoPlayMode = str(cfg.autoPlayMode, "full")
-	Config.autoPlayVersion = str(cfg.autoPlayVersion, "V2")
-	Config.batCounterMode = str(cfg.batCounterMode, "Classic")
-	Config.autoStealVersion = str(cfg.autoStealVersion, "V1")
-	Config.batAimbotVersion = str(cfg.batAimbotVersion, "Normal")
-	Config.batTpVersion = str(cfg.batTpVersion, "V2")
-	Config.dropType = str(cfg.dropType, "Jump")
-	Config.stealBarStyle = str(cfg.stealBarStyle, "Compact")
-	Config.buttonShape = str(cfg.buttonShape, "Square")
-	Config.fontStyle = str(cfg.fontStyle, "K2 Winter")
-	Config.antiRagdollMode = str(cfg.antiRagdollMode, "V1")
-	Config.infJumpMode = str(cfg.infJumpMode, "manual")
-	Config.bgMode = str(cfg.bgMode, "image")
-	if type(cfg.mainBgIndex) == "number" then n13 = cfg.mainBgIndex end
-
-	-- keybinds: resolve Enum.KeyCode by name into tbl11
-	local function resolveKey(name)
-		if type(name) ~= "string" or name == "" or name == "_cleared_" then return nil end
-		local ok, key = pcall(function() return Enum.KeyCode[name] end)
-		if ok and key then return key end
-		return nil
-	end
-	if tbl11 then
-		if cfg.speedKey == "_cleared_" then
-			tbl11.speed = nil
-			Config._speedKeyCleared = true
-		elseif cfg.speedKey then
-			tbl11.speed = resolveKey(cfg.speedKey)
-		end
-		if cfg.guiHideKey == "_cleared_" then
-			tbl11.guiHide = nil
-		elseif cfg.guiHideKey then
-			tbl11.guiHide = resolveKey(cfg.guiHideKey)
-		end
-		if cfg.autoPlayKey then tbl11.autoPlay = resolveKey(cfg.autoPlayKey) end
-		if cfg.autoLeftKey then tbl11.autoLeft = resolveKey(cfg.autoLeftKey) end
-		if cfg.autoRightKey then tbl11.autoRight = resolveKey(cfg.autoRightKey) end
-		if cfg.laggerKey then tbl11.lagger = resolveKey(cfg.laggerKey) end
-		if cfg.dropKey then tbl11.drop = resolveKey(cfg.dropKey) end
-		if cfg.tpDownKey == "_cleared_" then
-			tbl11.tpDown = nil
-		elseif cfg.tpDownKey then
-			tbl11.tpDown = resolveKey(cfg.tpDownKey)
-		end
-		if cfg.aimbotKey then tbl11.aimbot = resolveKey(cfg.aimbotKey) end
-		if cfg.laggerFuncKey then tbl11.laggerFunc = resolveKey(cfg.laggerFuncKey) end
-		if cfg.batLaggerKey then tbl11.batLagger = resolveKey(cfg.batLaggerKey) end
-		if cfg.batTpKey then tbl11.batTp = resolveKey(cfg.batTpKey) end
-		if cfg.smartBatTpKey then tbl11.smartBatTp = resolveKey(cfg.smartBatTpKey) end
-	end
-
-	getgenv().K2_LastConfig = cfg
-	return true
-end
-
--- aliases used by rest of script
-local k2_autoSavePending = false
-function k2ScheduleSave()
-	if k2_autoSavePending then return end
-	k2_autoSavePending = true
-	task.delay(0.35, function()
-		k2_autoSavePending = false
-		pcall(k2SaveConfig)
-	end)
-end
 
 local tbl2 = {}
 pcall(function()
@@ -4191,6 +3841,369 @@ local function fn32(arg)
 	end
 	return tbl32
 end
+------------------------------------------------------------
+-- K2 CONFIG (SpaceHub-style: flat file, primitives only)
+------------------------------------------------------------
+local K2_CONFIG_FILE = "K2Config.json"
+local function k2Genv()
+	local ok, g = pcall(function()
+		return getgenv and getgenv() or _G
+	end)
+	return (ok and g) or _G
+end
+
+local function k2KeyName(keyObj)
+	if not keyObj then return nil end
+	local ok, name = pcall(function() return keyObj.Name end)
+	if ok and type(name) == "string" then return name end
+	return nil
+end
+
+local function k2BuildConfigTable()
+	if type(Config) ~= "table" then
+		return {}
+	end
+	local cfg = {
+		-- speeds
+		normalSpeed = tonumber(Config.normalSpeed) or 60,
+		carrySpeed = tonumber(Config.carrySpeed) or 30,
+		laggerSpeed = tonumber(Config.laggerSpeed) or 10.1,
+		normalStealSpeed = tonumber(Config.normalStealSpeed) or 30,
+		laggerStealSpeed = tonumber(Config.laggerStealSpeed) or 10.1,
+		carryStealSpeed = tonumber(Config.carryStealSpeed) or 20,
+		stealRadius = tonumber(tbl17 and tbl17.StealRadius) or 20,
+		stealFreezePercent = tonumber(Config.stealFreezePercent) or 85,
+		uiScale = tonumber(Config.uiScale) or 1,
+		-- toggles
+		infJump = Config.infJumpEnabled == true,
+		antiRagdoll = Config.antiRagdollEnabled == true,
+		antiLag = Config.antiLagEnabled == true,
+		potatoGraphics = Config.potatoGraphicsEnabled == true,
+		medusaCounter = Config.medusaCounterEnabled == true,
+		batAimbotToggled = Config.batAimbotToggled == true,
+		autoSwingEnabled = Config.autoSwingEnabled == true,
+		autoStealEnabled = Config.autoStealEnabled == true,
+		autoStealStopWhenHit = Config.autoStealStopWhenHit == true,
+		autoCarryOnSteal = Config.autoCarrySpeedEnabled ~= false,
+		autoTPDownEnabled = Config.autoTPDownEnabled == true,
+		autoTPDownHeight = tonumber(Config.autoTPDownHeight) or 20,
+		holdJumpEnabled = Config.holdJumpEnabled == true,
+		ragdollTimerEnabled = Config.ragdollTimerEnabled == true,
+		enemyRagdollTimerEnabled = Config.enemyRagdollTimerEnabled == true,
+		autoLeftEnabled = Config.autoLeftEnabled == true,
+		autoRightEnabled = Config.autoRightEnabled == true,
+		dropEnabled = Config.dropEnabled == true,
+		espBoxEnabled = Config.espBoxEnabled == true,
+		espLineEnabled = Config.espLineEnabled == true,
+		espPlayerEnabled = Config.espPlayerEnabled == true,
+		espInfoEnabled = Config.espInfoEnabled == true,
+		unwalkEnabled = Config.unwalkEnabled == true,
+		tryhardAnimEnabled = Config.tryhardAnimEnabled == true,
+		playerAnimEnabled = Config.playerAnimEnabled == true,
+		batCounterEnabled = Config.batCounterEnabled == true,
+		batTpEnabled = Config.batTpEnabled == true,
+		smartBatTpEnabled = Config.smartBatTpEnabled == true,
+		laggerFuncEnabled = Config.laggerFuncEnabled == true,
+		safeModeEnabled = Config.safeModeEnabled ~= false,
+		dropBrainrotMode = Config.dropBrainrotMode == true,
+		batTpNoCollision = Config.batTpNoCollision == true,
+		statsBarEnabled = Config.statsBarEnabled ~= false,
+		skipIntro = Config.skipIntro == true,
+		skipIntroConfigured = Config.skipIntroConfigured == true,
+		uiLocked = Config.uiLocked == true,
+		lockButtonsEnabled = Config.lockButtonsEnabled == true,
+		stackButtonsHidden = Config.stackButtonsHidden == true,
+		fovEnabled = Config.fovEnabled == true,
+		resEnabled = Config.resEnabled == true,
+		silentBatAim = Config.silentBatAim == true,
+		autoLaggerSpd = Config.autoLaggerSpd == true,
+		-- numbers
+		fovValue = tonumber(Config.fovValue) or 80,
+		resFov = tonumber(Config.resFov) or 100,
+		sbaRange = tonumber(Config.sbaRange) or 50,
+		sbaTurnSpeed = tonumber(Config.sbaTurnSpeed) or 30,
+		smartBatTpDistance = tonumber(Config.smartBatTpDistance) or 9,
+		smartBatTpSpeed = tonumber(Config.smartBatTpSpeed) or 42,
+		popupScale = tonumber(Config.popupScale) or 1,
+		floatScale = tonumber(Config.floatScale) or 0.7,
+		stealBarScale = tonumber(Config.stealBarScale) or 1,
+		billboardScale = tonumber(Config.billboardScale) or 1,
+		-- strings
+		autoPlayMode = tostring(Config.autoPlayMode or "full"),
+		autoPlayVersion = tostring(Config.autoPlayVersion or "V2"),
+		batCounterMode = tostring(Config.batCounterMode or "Classic"),
+		autoStealVersion = tostring(Config.autoStealVersion or "V1"),
+		batAimbotVersion = tostring(Config.batAimbotVersion or "Normal"),
+		batTpVersion = tostring(Config.batTpVersion or "V2"),
+		dropType = tostring(Config.dropType or "Jump"),
+		stealBarStyle = tostring(Config.stealBarStyle or "Compact"),
+		buttonShape = tostring(Config.buttonShape or "Square"),
+		fontStyle = tostring(Config.fontStyle or "K2 Winter"),
+		antiRagdollMode = tostring(Config.antiRagdollMode or "V1"),
+		infJumpMode = tostring(Config.infJumpMode or "manual"),
+		laggerMode = tostring(str or Config.laggerMode or "Desktop"),
+		bgMode = tostring(Config.bgMode or "image"),
+		mainBgIndex = tonumber(n13) or 1,
+		-- keybinds (names only)
+		speedKey = (tbl11 and tbl11.speed and k2KeyName(tbl11.speed)) or (Config._speedKeyCleared and "_cleared_" or nil),
+		guiHideKey = (tbl11 and tbl11.guiHide and k2KeyName(tbl11.guiHide)) or "_cleared_",
+		autoPlayKey = tbl11 and k2KeyName(tbl11.autoPlay) or nil,
+		autoLeftKey = tbl11 and k2KeyName(tbl11.autoLeft) or nil,
+		autoRightKey = tbl11 and k2KeyName(tbl11.autoRight) or nil,
+		laggerKey = tbl11 and k2KeyName(tbl11.lagger) or nil,
+		dropKey = tbl11 and k2KeyName(tbl11.drop) or nil,
+		tpDownKey = (tbl11 and k2KeyName(tbl11.tpDown)) or "_cleared_",
+		aimbotKey = tbl11 and k2KeyName(tbl11.aimbot) or nil,
+		laggerFuncKey = tbl11 and k2KeyName(tbl11.laggerFunc) or nil,
+		batLaggerKey = tbl11 and k2KeyName(tbl11.batLagger) or nil,
+		batTpKey = tbl11 and k2KeyName(tbl11.batTp) or nil,
+		smartBatTpKey = tbl11 and k2KeyName(tbl11.smartBatTp) or nil,
+	}
+	return cfg
+end
+
+function k2SaveConfig()
+	local cfg = k2BuildConfigTable()
+	local ok, encoded = pcall(function()
+		return HttpService:JSONEncode(cfg)
+	end)
+	if not ok or type(encoded) ~= "string" then
+		Config._lastSaveOk = false
+		Config._lastSaveErr = "encode failed: " .. tostring(encoded)
+		warn("[K2] " .. Config._lastSaveErr)
+		return false, Config._lastSaveErr
+	end
+	-- Try multiple write paths (flat file first — most reliable)
+	local paths = { K2_CONFIG_FILE, "vx7/K2Config.json", "vx7/Vx7Config.json" }
+	local written = false
+	local lastErr = nil
+	for _, path in ipairs(paths) do
+		-- ensure parent folder if nested
+		if path:find("/") then
+			local folder = path:match("^(.+)/[^/]+$")
+			if folder then
+				pcall(function()
+					local mf = makefolder or (syn and syn.makefolder) or (getgenv() and getgenv().makefolder)
+					if mf then mf(folder) end
+				end)
+			end
+		end
+		local wOk, wErr = pcall(function()
+			local wf = writefile or (syn and syn.writefile) or writefile_ or (getgenv() and getgenv().writefile)
+			if not wf then error("no writefile") end
+			wf(path, encoded)
+		end)
+		if wOk then
+			-- verify
+			local rOk, body = pcall(function()
+				local rf = readfile or (syn and syn.readfile) or readfile_ or (getgenv() and getgenv().readfile)
+				return rf and rf(path)
+			end)
+			if rOk and type(body) == "string" and #body > 10 then
+				written = true
+				k2Genv().K2_LastConfig = cfg
+				k2Genv().K2_ConfigPath = path
+				Config._lastSaveOk = true
+				Config._lastSaveErr = nil
+				Config._lastSavePath = path
+				return true, path
+			else
+				lastErr = "wrote " .. path .. " but re-read failed"
+			end
+		else
+			lastErr = tostring(wErr)
+		end
+	end
+	Config._lastSaveOk = false
+	Config._lastSaveErr = lastErr or "write failed"
+	warn("[K2] Config save failed:", Config._lastSaveErr)
+	return false, Config._lastSaveErr
+end
+
+function k2LoadConfig()
+	if type(Config) ~= "table" then
+		return false
+	end
+	local paths = {
+		k2Genv().K2_ConfigPath,
+		K2_CONFIG_FILE,
+		"vx7/K2Config.json",
+		"vx7/Vx7Config.json",
+	}
+	local cfg = nil
+	if type(k2Genv().K2_LastConfig) == "table" and next(k2Genv().K2_LastConfig) then
+		cfg = k2Genv().K2_LastConfig
+	end
+	if not cfg then
+		for _, path in ipairs(paths) do
+			if type(path) == "string" then
+				local ok, body = pcall(function()
+					local rf = readfile or (syn and syn.readfile) or readfile_ or (getgenv() and getgenv().readfile)
+					if not rf then return nil end
+					return rf(path)
+				end)
+				if ok and type(body) == "string" and #body > 10 then
+					local dOk, decoded = pcall(function()
+						return HttpService:JSONDecode(body)
+					end)
+					if dOk and type(decoded) == "table" then
+						cfg = decoded
+						k2Genv().K2_ConfigPath = path
+						break
+					end
+				end
+			end
+		end
+	end
+	if type(cfg) ~= "table" then
+		return true -- nothing to load
+	end
+
+	local function num(v, default)
+		v = tonumber(v)
+		return v or default
+	end
+	local function bool(v, default)
+		if type(v) == "boolean" then return v end
+		return default
+	end
+	local function str(v, default)
+		if type(v) == "string" and v ~= "" then return v end
+		return default
+	end
+
+	-- apply speeds
+	Config.normalSpeed = num(cfg.normalSpeed, Config.normalSpeed or 60)
+	Config.carrySpeed = num(cfg.carrySpeed, Config.carrySpeed or 30)
+	Config.laggerSpeed = num(cfg.laggerSpeed, Config.laggerSpeed or 10.1)
+	Config.normalStealSpeed = num(cfg.normalStealSpeed, Config.normalStealSpeed or 30)
+	Config.laggerStealSpeed = num(cfg.laggerStealSpeed, Config.laggerStealSpeed or 10.1)
+	Config.carryStealSpeed = num(cfg.carryStealSpeed, Config.carryStealSpeed or 20)
+	if tbl17 and cfg.stealRadius then tbl17.StealRadius = num(cfg.stealRadius, 20) end
+	Config.stealFreezePercent = num(cfg.stealFreezePercent, 85)
+	Config.uiScale = num(cfg.uiScale, 1)
+	-- toggles
+	Config.infJumpEnabled = bool(cfg.infJump, Config.infJumpEnabled)
+	Config.antiRagdollEnabled = bool(cfg.antiRagdoll, Config.antiRagdollEnabled)
+	Config.antiLagEnabled = bool(cfg.antiLag, Config.antiLagEnabled)
+	Config.potatoGraphicsEnabled = bool(cfg.potatoGraphics, Config.potatoGraphicsEnabled)
+	Config.medusaCounterEnabled = bool(cfg.medusaCounter, Config.medusaCounterEnabled)
+	Config.batAimbotToggled = bool(cfg.batAimbotToggled, Config.batAimbotToggled)
+	Config.autoSwingEnabled = bool(cfg.autoSwingEnabled, Config.autoSwingEnabled)
+	Config.autoStealEnabled = bool(cfg.autoStealEnabled, Config.autoStealEnabled)
+	Config.autoStealStopWhenHit = bool(cfg.autoStealStopWhenHit, false)
+	Config.autoCarrySpeedEnabled = bool(cfg.autoCarryOnSteal, true)
+	Config.autoTPDownEnabled = bool(cfg.autoTPDownEnabled, false)
+	Config.autoTPDownHeight = num(cfg.autoTPDownHeight, 20)
+	Config.holdJumpEnabled = bool(cfg.holdJumpEnabled, Config.holdJumpEnabled)
+	Config.ragdollTimerEnabled = bool(cfg.ragdollTimerEnabled, false)
+	Config.enemyRagdollTimerEnabled = bool(cfg.enemyRagdollTimerEnabled, false)
+	Config.autoLeftEnabled = bool(cfg.autoLeftEnabled, false)
+	Config.autoRightEnabled = bool(cfg.autoRightEnabled, false)
+	Config.dropEnabled = bool(cfg.dropEnabled, false)
+	Config.espBoxEnabled = bool(cfg.espBoxEnabled, Config.espBoxEnabled)
+	Config.espLineEnabled = bool(cfg.espLineEnabled, Config.espLineEnabled)
+	Config.espPlayerEnabled = bool(cfg.espPlayerEnabled, Config.espPlayerEnabled)
+	Config.espInfoEnabled = bool(cfg.espInfoEnabled, Config.espInfoEnabled)
+	Config.unwalkEnabled = bool(cfg.unwalkEnabled, Config.unwalkEnabled)
+	Config.tryhardAnimEnabled = bool(cfg.tryhardAnimEnabled, Config.tryhardAnimEnabled)
+	Config.playerAnimEnabled = bool(cfg.playerAnimEnabled, false)
+	Config.batCounterEnabled = bool(cfg.batCounterEnabled, Config.batCounterEnabled)
+	Config.batTpEnabled = bool(cfg.batTpEnabled, Config.batTpEnabled)
+	Config.smartBatTpEnabled = bool(cfg.smartBatTpEnabled, Config.smartBatTpEnabled)
+	Config.laggerFuncEnabled = bool(cfg.laggerFuncEnabled, Config.laggerFuncEnabled)
+	Config.safeModeEnabled = bool(cfg.safeModeEnabled, true)
+	Config.dropBrainrotMode = bool(cfg.dropBrainrotMode, false)
+	Config.batTpNoCollision = bool(cfg.batTpNoCollision, false)
+	Config.statsBarEnabled = bool(cfg.statsBarEnabled, true)
+	Config.skipIntro = bool(cfg.skipIntro, Config.skipIntro)
+	Config.skipIntroConfigured = bool(cfg.skipIntroConfigured, Config.skipIntroConfigured)
+	Config.uiLocked = bool(cfg.uiLocked, false)
+	Config.lockButtonsEnabled = bool(cfg.lockButtonsEnabled, false)
+	Config.stackButtonsHidden = bool(cfg.stackButtonsHidden, false)
+	Config.fovEnabled = bool(cfg.fovEnabled, false)
+	Config.resEnabled = bool(cfg.resEnabled, false)
+	Config.silentBatAim = bool(cfg.silentBatAim, false)
+	Config.autoLaggerSpd = bool(cfg.autoLaggerSpd, false)
+	-- numbers
+	Config.fovValue = num(cfg.fovValue, 80)
+	Config.resFov = num(cfg.resFov, 100)
+	Config.sbaRange = num(cfg.sbaRange, 50)
+	Config.sbaTurnSpeed = num(cfg.sbaTurnSpeed, 30)
+	Config.smartBatTpDistance = num(cfg.smartBatTpDistance, 9)
+	Config.smartBatTpSpeed = num(cfg.smartBatTpSpeed, 42)
+	Config.popupScale = num(cfg.popupScale, 1)
+	Config.floatScale = num(cfg.floatScale, 0.7)
+	Config.stealBarScale = num(cfg.stealBarScale, 1)
+	Config.billboardScale = num(cfg.billboardScale, 1)
+	-- strings
+	Config.autoPlayMode = str(cfg.autoPlayMode, "full")
+	Config.autoPlayVersion = str(cfg.autoPlayVersion, "V2")
+	Config.batCounterMode = str(cfg.batCounterMode, "Classic")
+	Config.autoStealVersion = str(cfg.autoStealVersion, "V1")
+	Config.batAimbotVersion = str(cfg.batAimbotVersion, "Normal")
+	Config.batTpVersion = str(cfg.batTpVersion, "V2")
+	Config.dropType = str(cfg.dropType, "Jump")
+	Config.stealBarStyle = str(cfg.stealBarStyle, "Compact")
+	Config.buttonShape = str(cfg.buttonShape, "Square")
+	Config.fontStyle = str(cfg.fontStyle, "K2 Winter")
+	Config.antiRagdollMode = str(cfg.antiRagdollMode, "V1")
+	Config.infJumpMode = str(cfg.infJumpMode, "manual")
+	Config.bgMode = str(cfg.bgMode, "image")
+	if type(cfg.mainBgIndex) == "number" then n13 = cfg.mainBgIndex end
+
+	-- keybinds: resolve Enum.KeyCode by name into tbl11
+	local function resolveKey(name)
+		if type(name) ~= "string" or name == "" or name == "_cleared_" then return nil end
+		local ok, key = pcall(function() return Enum.KeyCode[name] end)
+		if ok and key then return key end
+		return nil
+	end
+	if tbl11 then
+		if cfg.speedKey == "_cleared_" then
+			tbl11.speed = nil
+			Config._speedKeyCleared = true
+		elseif cfg.speedKey then
+			tbl11.speed = resolveKey(cfg.speedKey)
+		end
+		if cfg.guiHideKey == "_cleared_" then
+			tbl11.guiHide = nil
+		elseif cfg.guiHideKey then
+			tbl11.guiHide = resolveKey(cfg.guiHideKey)
+		end
+		if cfg.autoPlayKey then tbl11.autoPlay = resolveKey(cfg.autoPlayKey) end
+		if cfg.autoLeftKey then tbl11.autoLeft = resolveKey(cfg.autoLeftKey) end
+		if cfg.autoRightKey then tbl11.autoRight = resolveKey(cfg.autoRightKey) end
+		if cfg.laggerKey then tbl11.lagger = resolveKey(cfg.laggerKey) end
+		if cfg.dropKey then tbl11.drop = resolveKey(cfg.dropKey) end
+		if cfg.tpDownKey == "_cleared_" then
+			tbl11.tpDown = nil
+		elseif cfg.tpDownKey then
+			tbl11.tpDown = resolveKey(cfg.tpDownKey)
+		end
+		if cfg.aimbotKey then tbl11.aimbot = resolveKey(cfg.aimbotKey) end
+		if cfg.laggerFuncKey then tbl11.laggerFunc = resolveKey(cfg.laggerFuncKey) end
+		if cfg.batLaggerKey then tbl11.batLagger = resolveKey(cfg.batLaggerKey) end
+		if cfg.batTpKey then tbl11.batTp = resolveKey(cfg.batTpKey) end
+		if cfg.smartBatTpKey then tbl11.smartBatTp = resolveKey(cfg.smartBatTpKey) end
+	end
+
+	k2Genv().K2_LastConfig = cfg
+	return true
+end
+
+-- aliases used by rest of script
+local k2_autoSavePending = false
+function k2ScheduleSave()
+	if k2_autoSavePending then return end
+	k2_autoSavePending = true
+	task.delay(0.35, function()
+		k2_autoSavePending = false
+		pcall(k2SaveConfig)
+	end)
+end
+
+
 local function fn33()
 	local function fn34(arg)
 		if not arg or not arg.type or not arg.value then
@@ -4412,7 +4425,7 @@ local function fn33()
 				saveOk = true
 				-- also stash in memory so load works even if isfile is broken
 				tbl[1][6][tbl[1][3]] = tbl32
-				getgenv().K2_LastConfig = tbl32
+				k2Genv().K2_LastConfig = tbl32
 			else
 				saveErr = "wrote but could not re-read file"
 			end
@@ -4746,7 +4759,7 @@ local function fn39()
 	local data = tbl[1][6][tbl[1][3]]
 	local v23 = data
 	tbl[1][6][tbl[1][3]] = nil
-	if type(v23) ~= "table" and type(getgenv().K2_LastConfig) == "table" then
+	if type(v23) ~= "table" and type(k2Genv().K2_LastConfig) == "table" then
 		-- already applied by k2LoadConfig
 		return true
 	end
@@ -23758,7 +23771,7 @@ tbl31 = {
 							if df then df(p) else writefile(p, "{}") end
 						end)
 					end
-					getgenv().K2_LastConfig = nil
+					k2Genv().K2_LastConfig = nil
 				end)
 				statusLbl.Text = "Saved config cleared"
 				statusLbl.TextColor3 = glass.muted
