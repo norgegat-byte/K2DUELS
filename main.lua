@@ -3964,43 +3964,84 @@ end
 
 function k2SaveConfig()
 	local cfg = k2BuildConfigTable()
+	if type(cfg) ~= "table" or not next(cfg) then
+		Config._lastSaveOk = false
+		Config._lastSaveErr = "empty config"
+		return false, Config._lastSaveErr
+	end
 	local ok, encoded = pcall(function()
 		return HttpService:JSONEncode(cfg)
 	end)
-	if not ok or type(encoded) ~= "string" then
+	if not ok or type(encoded) ~= "string" or #encoded < 5 then
 		Config._lastSaveOk = false
 		Config._lastSaveErr = "encode failed: " .. tostring(encoded)
 		warn("[K2] " .. Config._lastSaveErr)
 		return false, Config._lastSaveErr
 	end
-	-- Try multiple write paths (flat file first — most reliable)
-	local paths = { K2_CONFIG_FILE, "vx7/K2Config.json", "vx7/Vx7Config.json" }
-	local written = false
+
+	local function getWrite()
+		return writefile
+			or (syn and syn.writefile)
+			or writefile_
+			or (getgenv and getgenv().writefile)
+			or (fluxus and fluxus.writefile)
+	end
+	local function getRead()
+		return readfile
+			or (syn and syn.readfile)
+			or readfile_
+			or (getgenv and getgenv().readfile)
+			or (fluxus and fluxus.readfile)
+	end
+	local function getMakeFolder()
+		return makefolder
+			or (syn and syn.makefolder)
+			or (getgenv and getgenv().makefolder)
+	end
+
+	-- Flat workspace file first (survives full Roblox close)
+	local paths = {
+		"K2Config.json",
+		"k2_config.json",
+		"vx7/K2Config.json",
+		"vx7/Vx7Config.json",
+	}
+	local wf = getWrite()
+	if not wf then
+		Config._lastSaveOk = false
+		Config._lastSaveErr = "writefile not available"
+		warn("[K2] " .. Config._lastSaveErr)
+		return false, Config._lastSaveErr
+	end
+
 	local lastErr = nil
+	local savedPath = nil
 	for _, path in ipairs(paths) do
-		-- ensure parent folder if nested
 		if path:find("/") then
 			local folder = path:match("^(.+)/[^/]+$")
 			if folder then
 				pcall(function()
-					local mf = makefolder or (syn and syn.makefolder) or (getgenv() and getgenv().makefolder)
+					local mf = getMakeFolder()
 					if mf then mf(folder) end
 				end)
 			end
 		end
-		local wOk, wErr = pcall(function()
-			local wf = writefile or (syn and syn.writefile) or writefile_ or (getgenv() and getgenv().writefile)
-			if not wf then error("no writefile") end
-			wf(path, encoded)
-		end)
+		local wOk, wErr = pcall(wf, path, encoded)
 		if wOk then
-			-- verify
+			-- force verify from disk (not memory)
+			task.wait() -- yield so FS can flush on some executors
 			local rOk, body = pcall(function()
-				local rf = readfile or (syn and syn.readfile) or readfile_ or (getgenv() and getgenv().readfile)
+				local rf = getRead()
 				return rf and rf(path)
 			end)
 			if rOk and type(body) == "string" and #body > 10 then
-				written = true
+				savedPath = path
+				-- also write secondary backup
+				pcall(function()
+					if path ~= "K2Config.json" then
+						wf("K2Config.json", encoded)
+					end
+				end)
 				k2Genv().K2_LastConfig = cfg
 				k2Genv().K2_ConfigPath = path
 				Config._lastSaveOk = true
@@ -4024,36 +4065,41 @@ function k2LoadConfig()
 	if type(Config) ~= "table" then
 		return false
 	end
+	-- Disk first so config survives full Roblox close/reopen
 	local paths = {
-		k2Genv().K2_ConfigPath,
-		K2_CONFIG_FILE,
+		"K2Config.json",
+		"k2_config.json",
 		"vx7/K2Config.json",
 		"vx7/Vx7Config.json",
+		k2Genv().K2_ConfigPath,
 	}
 	local cfg = nil
-	if type(k2Genv().K2_LastConfig) == "table" and next(k2Genv().K2_LastConfig) then
-		cfg = k2Genv().K2_LastConfig
-	end
-	if not cfg then
-		for _, path in ipairs(paths) do
-			if type(path) == "string" then
-				local ok, body = pcall(function()
-					local rf = readfile or (syn and syn.readfile) or readfile_ or (getgenv() and getgenv().readfile)
-					if not rf then return nil end
-					return rf(path)
+	for _, path in ipairs(paths) do
+		if type(path) == "string" then
+			local ok, body = pcall(function()
+				local rf = readfile
+					or (syn and syn.readfile)
+					or readfile_
+					or (getgenv and getgenv().readfile)
+					or (fluxus and fluxus.readfile)
+				if not rf then return nil end
+				return rf(path)
+			end)
+			if ok and type(body) == "string" and #body > 10 then
+				local dOk, decoded = pcall(function()
+					return HttpService:JSONDecode(body)
 				end)
-				if ok and type(body) == "string" and #body > 10 then
-					local dOk, decoded = pcall(function()
-						return HttpService:JSONDecode(body)
-					end)
-					if dOk and type(decoded) == "table" then
-						cfg = decoded
-						k2Genv().K2_ConfigPath = path
-						break
-					end
+				if dOk and type(decoded) == "table" and next(decoded) then
+					cfg = decoded
+					k2Genv().K2_ConfigPath = path
+					break
 				end
 			end
 		end
+	end
+	-- memory fallback only if disk missing (same session)
+	if not cfg and type(k2Genv().K2_LastConfig) == "table" and next(k2Genv().K2_LastConfig) then
+		cfg = k2Genv().K2_LastConfig
 	end
 	if type(cfg) ~= "table" then
 		return true -- nothing to load
@@ -4197,11 +4243,19 @@ local k2_autoSavePending = false
 function k2ScheduleSave()
 	if k2_autoSavePending then return end
 	k2_autoSavePending = true
-	task.delay(0.35, function()
+	task.delay(0.2, function()
 		k2_autoSavePending = false
 		pcall(k2SaveConfig)
 	end)
 end
+
+-- Periodic disk save so force-closing Roblox still keeps recent settings
+task.spawn(function()
+	while true do
+		task.wait(20)
+		pcall(k2SaveConfig)
+	end
+end)
 
 
 local function fn33()
@@ -4463,15 +4517,28 @@ local function fn35()
 end
 -- Wire old names to new system
 scheduleSaveConfig = k2ScheduleSave
--- Force-save on leave
+-- Force disk save when Roblox is closing (full exit)
 pcall(function()
 	game:BindToClose(function()
+		pcall(k2SaveConfig)
+		-- give filesystem a moment to flush before process exits
+		local t0 = os.clock()
+		while os.clock() - t0 < 0.4 do
+			task.wait(0.05)
+		end
 		pcall(k2SaveConfig)
 	end)
 end)
 pcall(function()
 	Players.LocalPlayer.AncestryChanged:Connect(function(_, parent)
 		if not parent then
+			pcall(k2SaveConfig)
+		end
+	end)
+end)
+pcall(function()
+	Players.PlayerRemoving:Connect(function(plr)
+		if plr == Players.LocalPlayer then
 			pcall(k2SaveConfig)
 		end
 	end)
