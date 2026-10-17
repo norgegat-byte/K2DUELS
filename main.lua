@@ -424,62 +424,8 @@ print("_AdaptMain")
 										adaptIntroSongIndex = #tbl18
 
 										fn26 = function(arg)
-											return -- K2: intro music removed
-											if #tbl18 ~= 0 then
-												if type(writefile) ~= "function" or type(getcustomasset) ~= "function" then
-													warn("[K2] Intro music is unavailable: this executor does not support custom assets.")
-													return
-												end
-
-												task.spawn(function()
-													local ok, result = pcall(function()
-														local clamp = math.clamp
-														local floor2 = math.floor
-														local num = tonumber(_G._AdaptIntroSongIndex) or v77[69]
-														local n34 = #tbl18
-														local v79 = tbl18[clamp(floor2(num), 1, n34)]
-														local str9 = "K2IntroMusic_" .. (v79.cacheFile or v79.url:match("/([^/]+)$") or v77[81]):gsub("[^%w%._%-]", "_")
-
-														if type(isfile) ~= "function" or not isfile(str9) then
-															writefile(str9, game:HttpGet(v79.url))
-														end
-
-														local sound = Instance.new("Sound")
-														sound.Name = "K2IntroMusic"
-														sound.SoundId = getcustomasset(str9)
-														sound.Volume = 0.7
-														sound.Looped = false
-														sound.Parent = game:GetService("SoundService")
-														sound.TimePosition = tonumber(v79.startTime) or 0
-														sound:Play()
-														if arg and arg(sound) == false then
-															sound:Destroy()
-															return
-														end
-														task.wait(6)
-														if not sound.Parent then
-															return
-														end
-														local tween2 = TweenService:Create(sound, TweenInfo.new(0.5, Enum.EasingStyle.Linear), { Volume = 0 })
-														tween2:Play()
-														tween2.Completed:Wait()
-														sound:Destroy()
-													end)
-
-													if not ok then
-														warn("[K2] Could not play intro music:", result)
-													end
-												end)
-
-												return
-											end
-
-											if not (n25 < 3738) then
-												return
-											end
-
-											while true do
-											end
+											-- K2: intro music fully removed
+											return
 										end
 
 										fn27 = function(arg)
