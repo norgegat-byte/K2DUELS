@@ -4544,7 +4544,7 @@ canSaveConfig = (type(_ambitious_readfile) == "function" and type(_ambitious_wri
 
 -- Intro
 selectedIntroMusic = selectedIntroMusic or 1
-_introEnabled = (_introEnabled ~= false)
+_introEnabled = false -- K2: intro removed
 setIntroVisual = nil
 setIntroSongVisual = nil
 INTRO_MUSIC_OPTIONS = INTRO_MUSIC_OPTIONS or {
@@ -4658,7 +4658,7 @@ function cacheIntroSong(option, allowDownload)
   return loadExisting()
 end
 
-function preloadIntroSongs()
+function -- preloadIntroSongs() disabled (K2 no music)
   task.spawn(function()
     cacheIntroSong(INTRO_MUSIC_OPTIONS[selectedIntroMusic], true)
     for _, option in ipairs(INTRO_MUSIC_OPTIONS) do
@@ -4725,7 +4725,7 @@ function playIntroMusic()
   end)
 end
 
-preloadIntroSongs()
+-- preloadIntroSongs() disabled (K2 no music)
 
 -- ============================================================
 -- MUSIC PLAYER (stessa logica dell'intro: download -> cache -> getcustomasset)
@@ -5833,7 +5833,7 @@ function loadAmbitiousConfig()
     end
   end
   -- <<< CUSTOM ANIM PACK END
-  if data.introEnabled ~= nil then _introEnabled = data.introEnabled == true end
+  _introEnabled = false -- K2: never restore intro
   if data.selectedIntroMusic and INTRO_MUSIC_OPTIONS[data.selectedIntroMusic] then selectedIntroMusic = data.selectedIntroMusic end
   if data.musicSelectedSong and MUSIC_PLAYER_OPTIONS and MUSIC_PLAYER_OPTIONS[data.musicSelectedSong] then selectedMusicSong = data.musicSelectedSong end
   if data.musicVolume ~= nil then musicPlayerVolume = math.clamp(tonumber(data.musicVolume) or 1, 0, 2) end
@@ -11648,16 +11648,25 @@ function _G.K2DuelsCycleTheme()
 end
 
 local COLORS = {
-  -- K2 DUELS / LTM grey glass palette (purple removed)
+  -- Match K2 LTM Egg Farm / Code Sniper grey glass exactly
   bg = Color3.fromRGB(8, 7, 14),
-  row = Color3.fromRGB(13, 11, 20),
-  row2 = Color3.fromRGB(20, 17, 28),
-  stroke = Color3.fromRGB(120, 120, 130),
-  strokeSoft = Color3.fromRGB(72, 72, 80),
+  bg1 = Color3.fromRGB(13, 11, 23),
+  row = Color3.fromRGB(20, 17, 34),
+  row2 = Color3.fromRGB(30, 26, 50),
+  stroke = Color3.fromRGB(72, 72, 72),
+  strokeSoft = Color3.fromRGB(55, 55, 55),
   white = Color3.fromRGB(255, 255, 255),
-  textDim = Color3.fromRGB(175, 175, 180),
-  toggleBg = Color3.fromRGB(18, 18, 22),
-  knob = Color3.fromRGB(238, 238, 245),
+  textDim = Color3.fromRGB(125, 125, 125),
+  muted = Color3.fromRGB(175, 175, 175),
+  accent = Color3.fromRGB(205, 205, 205),
+  line = Color3.fromRGB(72, 72, 72),
+  field = Color3.fromRGB(11, 10, 20),
+  toggleBg = Color3.fromRGB(11, 10, 20),
+  knob = Color3.fromRGB(255, 255, 255),
+  cardHi = Color3.fromRGB(30, 26, 50),
+  green = Color3.fromRGB(64, 224, 128),
+  red = Color3.fromRGB(235, 72, 82),
+  yellow = Color3.fromRGB(246, 206, 76),
 }
 _G.K2DuelsTheme = _G.K2DuelsTheme or "Grey"
 
@@ -11669,24 +11678,13 @@ function corner(parent, radius)
 end
 
 function stroke(parent, color, thickness, transparency)
+  -- LTM-style border stroke (no purple shimmer)
   local s = Instance.new("UIStroke")
   s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
   s.Color = color or COLORS.stroke
   s.Thickness = thickness or 1
-  s.Transparency = transparency or 0.35
+  s.Transparency = transparency or 0.45
   s.Parent = parent
-  local g = Instance.new("UIGradient")
-  g.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(155, 160, 185)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
-  })
-  g.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 0.55),
-    NumberSequenceKeypoint.new(0.5, 0.1),
-    NumberSequenceKeypoint.new(1, 0.55),
-  })
-  g.Parent = s
   return s
 end
 
@@ -12018,11 +12016,42 @@ Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.Size = FULL_MAIN_SIZE
 Main.Position = tableToUDim2(savedMainPositionTable, UDim2.new(0.5, 0, 0.5, 0))
 savedMainPositionTable = udim2ToTable(Main.Position)
-Main.BackgroundColor3 = Color3.fromRGB(13, 11, 20)
+Main.BackgroundColor3 = Color3.fromRGB(8, 7, 14)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.ClipsDescendants = true
+pcall(function()
+  local c = Main:FindFirstChildOfClass("UICorner")
+  if not c then c = Instance.new("UICorner"); c.Parent = Main end
+  c.CornerRadius = UDim.new(0, 16)
+end)
 Main.Parent = Gui
+-- K2LTMChrome: LTM window depth
+do
+  local sh = Instance.new("Frame")
+  sh.Name = "K2Shadow"
+  sh.Size = UDim2.new(1, 16, 1, 16)
+  sh.Position = UDim2.fromOffset(-8, -2)
+  sh.BackgroundColor3 = Color3.new(0,0,0)
+  sh.BackgroundTransparency = 0.55
+  sh.BorderSizePixel = 0
+  sh.ZIndex = 0
+  sh.Parent = Main
+  corner(sh, 18)
+  local rim = Instance.new("Frame")
+  rim.Name = "K2Rim"
+  rim.Size = UDim2.fromScale(1,1)
+  rim.BackgroundTransparency = 1
+  rim.BorderSizePixel = 0
+  rim.ZIndex = 20
+  rim.Parent = Main
+  corner(rim, 14)
+  local rs = Instance.new("UIStroke")
+  rs.Color = Color3.fromRGB(160, 160, 170)
+  rs.Thickness = 1.2
+  rs.Transparency = 0.35
+  rs.Parent = rim
+end
 corner(Main, 28)
 stroke(Main, COLORS.stroke, 1.1, 0.35)
 
@@ -12055,10 +12084,62 @@ K2TitleImage.AnchorPoint = Vector2.new(0.5, 0)
 K2TitleImage.Position = UDim2.new(0.5, 0, 0, -106)
 K2TitleImage.Size = UDim2.new(0, 1000, 0, 300)
 K2TitleImage.BackgroundTransparency = 1
-K2TitleImage.Image = "rbxassetid://128938872032759"
+K2TitleImage.Image = ""
+K2TitleImage.ImageTransparency = 1
+K2TitleImage.Visible = false
 K2TitleImage.ScaleType = Enum.ScaleType.Fit
 K2TitleImage.ZIndex = 5
 K2TitleImage.Parent = Main
+-- K2 text header (replaces Ambitious logo art)
+do
+  local hdr = Instance.new("Frame")
+  hdr.Name = "K2Header"
+  hdr.BackgroundTransparency = 1
+  hdr.Size = UDim2.new(1, -24, 0, 44)
+  hdr.Position = UDim2.new(0, 12, 0, 8)
+  hdr.ZIndex = 6
+  hdr.Parent = Main
+  local badge = Instance.new("Frame")
+  badge.Size = UDim2.fromOffset(28, 28)
+  badge.Position = UDim2.fromOffset(0, 6)
+  badge.BackgroundColor3 = Color3.fromRGB(36, 36, 42)
+  badge.BorderSizePixel = 0
+  badge.ZIndex = 7
+  badge.Parent = hdr
+  Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 8)
+  local bs = Instance.new("UIStroke", badge)
+  bs.Color = Color3.fromRGB(160, 160, 170)
+  bs.Thickness = 1
+  bs.Transparency = 0.35
+  local bt = Instance.new("TextLabel", badge)
+  bt.BackgroundTransparency = 1
+  bt.Size = UDim2.fromScale(1,1)
+  bt.Font = Enum.Font.GothamBlack
+  bt.TextSize = 11
+  bt.Text = "K2"
+  bt.TextColor3 = Color3.fromRGB(230, 230, 235)
+  bt.ZIndex = 8
+  local t1 = Instance.new("TextLabel", hdr)
+  t1.BackgroundTransparency = 1
+  t1.Position = UDim2.fromOffset(36, 2)
+  t1.Size = UDim2.new(1, -40, 0, 20)
+  t1.Font = Enum.Font.GothamBlack
+  t1.TextSize = 16
+  t1.TextXAlignment = Enum.TextXAlignment.Left
+  t1.Text = "K2 DUELS"
+  t1.TextColor3 = Color3.fromRGB(240, 240, 245)
+  t1.ZIndex = 7
+  local t2 = Instance.new("TextLabel", hdr)
+  t2.BackgroundTransparency = 1
+  t2.Position = UDim2.fromOffset(36, 22)
+  t2.Size = UDim2.new(1, -40, 0, 16)
+  t2.Font = Enum.Font.GothamMedium
+  t2.TextSize = 11
+  t2.TextXAlignment = Enum.TextXAlignment.Left
+  t2.Text = "discord.gg/k2scripts"
+  t2.TextColor3 = Color3.fromRGB(150, 150, 160)
+  t2.ZIndex = 7
+end
 
 -- >>> TITLE STYLE BEGIN
 -- Due varianti del logo in alto. Lo stile 1 e' quello storico, il 2 e' la
@@ -12084,15 +12165,11 @@ _G.AmbitiousTitleStyle = math.clamp(
   1, #_G.AmbitiousTitleStyles)
 
 _G.AmbitiousApplyTitleStyle = function(idx)
-  idx = math.clamp(math.floor(tonumber(idx) or 1), 1, #_G.AmbitiousTitleStyles)
-  _G.AmbitiousTitleStyle = idx
-  local st = _G.AmbitiousTitleStyles[idx]
+  _G.AmbitiousTitleStyle = math.clamp(math.floor(tonumber(idx) or 1), 1, #_G.AmbitiousTitleStyles)
+  -- K2: logo image disabled; text header used instead
   pcall(function()
-    local k = tonumber(st.scale) or 1
-    K2TitleImage.Image    = st.image
-    K2TitleImage.Size     = UDim2.new(0, 1000 * k, 0, 300 * k)
-    -- centro verticale sempre a 44, qualunque sia la scala
-    K2TitleImage.Position = UDim2.new(0.5, 0, 0, 44 - 150 * k)
+    K2TitleImage.Visible = false
+    K2TitleImage.ImageTransparency = 1
   end)
 end
 _G.AmbitiousApplyTitleStyle(_G.AmbitiousTitleStyle)
@@ -12136,7 +12213,8 @@ MiniLogo.AnchorPoint = Vector2.new(0.5, 0.5)
 MiniLogo.Position = UDim2.new(0.5, 0, 0.5, 0)
 MiniLogo.Size = UDim2.new(4, 0, 4, 0)
 MiniLogo.BackgroundTransparency = 1
-MiniLogo.Image = "rbxassetid://128938872032759"
+MiniLogo.Image = ""
+MiniLogo.Visible = false
 MiniLogo.ScaleType = Enum.ScaleType.Fit
 MiniLogo.ZIndex = 22
 MiniLogo.Parent = MiniButton
@@ -12568,9 +12646,13 @@ BgImage.ScaleType = Enum.ScaleType.Crop
 BgImage.Size = UDim2.new(1, 0, 1, 0)
 BgImage.Position = UDim2.new(0, 0, 0, 0)
 BgImage.Visible = false
+BgImage.ImageTransparency = 1
 BgImage.ZIndex = 1
 BgImage.Parent = Main
 corner(BgImage, 14)
+-- solid grey shell
+Main.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+Main.BackgroundTransparency = 0
 
 local MiniBg = Instance.new("ImageLabel")
 MiniBg.Name = "MiniBg"
@@ -12585,12 +12667,19 @@ _miniBgCorner.CornerRadius = UDim.new(0, 8)
 _miniBgCorner.Parent = MiniBg
 
 function applyBackground(index)
-  customBgSelected = nil  -- deseleziona custom quando si sceglie un built-in
+  customBgSelected = nil
   currentBackground = (tonumber(index) and tonumber(index) >= 1) and tonumber(index) or 1
+  -- K2 grey redesign: never show purple wallpaper images
+  BgImage.Visible = false
+  BgImage.ImageTransparency = 1
+  MiniBg.ImageTransparency = 1
+  Main.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+  MiniFrame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
   local id = BackgroundIDs[currentBackground]
   if id then
+    -- keep ids for settings preview only; do not display on Main
     BgImage.Image = "rbxassetid://" .. id
-    BgImage.Visible = true
+    BgImage.Visible = false
     MiniBg.Image = "rbxassetid://" .. id
     saveAmbitiousConfig()
     -- Aggiorna preview custom bg row se esiste
@@ -12617,10 +12706,13 @@ end
 
 function applyCustomBackground(assetId)
   customBgSelected = assetId
-  currentBackground = 0  -- indica che il custom è selezionato
+  currentBackground = 0
   BgImage.Image = "rbxassetid://" .. assetId
-  BgImage.Visible = true
+  BgImage.Visible = false
+  BgImage.ImageTransparency = 1
   MiniBg.Image = "rbxassetid://" .. assetId
+  MiniBg.ImageTransparency = 1
+  Main.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
   saveAmbitiousConfig()
   if _G.AmbitiousCustomBgPreviewUpdate then pcall(_G.AmbitiousCustomBgPreviewUpdate) end
   _G._AmbitiousBgIndex = 0
@@ -12643,18 +12735,18 @@ if _G._AmbitiousApplyAccent then pcall(_G._AmbitiousApplyAccent) end
 -- RIMOSSO IL LINK DISCORD
 local HeaderDivider = Instance.new("Frame")
 HeaderDivider.Name = "HeaderDivider"
-HeaderDivider.BackgroundColor3 = Color3.fromRGB(70, 70, 82)
-HeaderDivider.BackgroundTransparency = 0.45
+HeaderDivider.BackgroundColor3 = COLORS.line
+HeaderDivider.BackgroundTransparency = 0.35
 HeaderDivider.BorderSizePixel = 0
 HeaderDivider.Size = UDim2.new(1, -34, 0, 1)
-HeaderDivider.Position = UDim2.new(0, 17, 0, 88)
+HeaderDivider.Position = UDim2.new(0, 17, 0, 56)
 HeaderDivider.ZIndex = 6
 HeaderDivider.Parent = Main
 
 local Close = Instance.new("TextButton")
 Close.Name = "Close"
-Close.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Close.BackgroundTransparency = 0.28
+Close.BackgroundColor3 = Color3.fromRGB(20, 17, 34)
+Close.BackgroundTransparency = 0.1
 Close.Text = "-"
 Close.TextColor3 = COLORS.white
 Close.TextSize = 22
@@ -12669,8 +12761,8 @@ stroke(Close, COLORS.stroke, 1, 0.35)
 
 AmbitiousLockTopButton = Instance.new("TextButton")
 AmbitiousLockTopButton.Name = "LockGUI"
-AmbitiousLockTopButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-AmbitiousLockTopButton.BackgroundTransparency = 0.28
+AmbitiousLockTopButton.BackgroundColor3 = Color3.fromRGB(20, 17, 34)
+AmbitiousLockTopButton.BackgroundTransparency = 0.1
 AmbitiousLockTopButton.TextColor3 = COLORS.white
 AmbitiousLockTopButton.TextSize = 8
 AmbitiousLockTopButton.Font = Enum.Font.GothamBlack
@@ -12705,7 +12797,7 @@ AmbitiousUpdateGuiLockVisual()
 local Content = Instance.new("Frame")
 Content.Name = "Content"
 Content.BackgroundTransparency = 1
-Content.Position = UDim2.new(0, 13, 0, 138)
+Content.Position = UDim2.new(0, 13, 0, 104)
 Content.Size = UDim2.new(1, -26, 1, -137)
 Content.ZIndex = 3
 Content.Parent = Main
@@ -12713,7 +12805,7 @@ Content.Parent = Main
 local Tabs = Instance.new("Frame")
 Tabs.Name = "Tabs"
 Tabs.BackgroundTransparency = 1
-Tabs.Position = UDim2.new(0, 12, 0, 97)
+Tabs.Position = UDim2.new(0, 12, 0, 64)
 Tabs.Size = UDim2.new(1, -24, 0, 34)
 Tabs.ZIndex = 3
 Tabs.Parent = Main
@@ -12792,12 +12884,13 @@ function setTab(name)
   end
   for tabName, btn in pairs(tabButtons) do
     local on = tabName == name
-    btn.TextColor3 = on and COLORS.white or Color3.fromRGB(170, 170, 180)
-    btn.BackgroundTransparency = on and 0.28 or 0.72
+    btn.TextColor3 = on and COLORS.white or COLORS.muted
+    btn.BackgroundColor3 = on and Color3.fromRGB(30, 26, 50) or Color3.fromRGB(11, 10, 20)
+    btn.BackgroundTransparency = on and 0.05 or 0.35
     local st = btn:FindFirstChildOfClass("UIStroke")
     if st then
-      st.Transparency = on and 0.05 or 0.52
-      st.Color = on and Color3.fromRGB(245, 245, 255) or COLORS.stroke
+      st.Transparency = on and 0.25 or 0.55
+      st.Color = on and Color3.fromRGB(200, 200, 210) or COLORS.line
     end
   end
 end
@@ -12807,11 +12900,11 @@ for _, name in ipairs(tabNames) do
   local btn = Instance.new("TextButton")
   btn.Name = name
   btn.Size = UDim2.new(0, 54, 0, 34)   -- ridotto per entrare
-  btn.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
-  btn.BackgroundTransparency = 0.72
+  btn.BackgroundColor3 = Color3.fromRGB(11, 10, 20)
+  btn.BackgroundTransparency = 0.35
   btn.BorderSizePixel = 0
   btn.Text = name
-  btn.TextColor3 = Color3.fromRGB(170, 170, 180)
+  btn.TextColor3 = COLORS.muted
   btn.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
   btn.TextStrokeTransparency = 0.35
   btn.TextSize = 8
@@ -12856,14 +12949,14 @@ end
   local LAYOUTS = {
     Up = {
       wide       = false,
-      tabsPos    = UDim2.new(0, 12, 0, 97),
+      tabsPos    = UDim2.new(0, 12, 0, 64),
       tabsSize   = UDim2.new(1, -24, 0, 34),
       dir        = H,
       pad        = UDim.new(0, 5),
       hAlign     = Enum.HorizontalAlignment.Center,
       vAlign     = Enum.VerticalAlignment.Center,
-      contentPos = UDim2.new(0, 13, 0, 138),
-      contentSize= UDim2.new(1, -26, 1, -137),
+      contentPos = UDim2.new(0, 13, 0, 104),
+      contentSize= UDim2.new(1, -26, 1, -112),
     },
     Bottom = {
       wide       = false,
@@ -13064,11 +13157,10 @@ function section(parent, text, order)
   label.Name = text
   label.BackgroundTransparency = 1
   label.Text = text
-  label.TextColor3 = Color3.fromRGB(245, 245, 255)
-  label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-  label.TextStrokeTransparency = 0.22
-  label.TextSize = 11
-  label.Font = Enum.Font.GothamBlack
+  label.TextColor3 = COLORS.accent
+  label.TextStrokeTransparency = 1
+  label.TextSize = 10
+  label.Font = Enum.Font.GothamBold
   label.TextXAlignment = Enum.TextXAlignment.Left
   label.Size = UDim2.new(1, -6, 0, 15)
   label.LayoutOrder = order
@@ -13078,41 +13170,38 @@ function section(parent, text, order)
 end
 
 function baseRow(parent, labelText, order)
+  -- K2 LTM-style card row
   local row = Instance.new("Frame")
   row.Name = labelText
   row.BackgroundColor3 = COLORS.row
-  row.BackgroundTransparency = 0.3
-  row.Size = UDim2.new(1, -4, 0, 34)
+  row.BackgroundTransparency = 0.12
+  row.Size = UDim2.new(1, -4, 0, 40)
   row.BorderSizePixel = 0
   row.LayoutOrder = order
   row.ZIndex = 4
   row.Parent = parent
-  corner(row, 9)
-  stroke(row, COLORS.strokeSoft, 1.15, 0.38)
+  corner(row, 10)
+  local edge = stroke(row, COLORS.line, 1, 0.55)
   local label = Instance.new("TextLabel")
   label.Name = "Label"
   label.BackgroundTransparency = 1
   label.Text = labelText
-  label.TextColor3 = Color3.fromRGB(245, 245, 255)
-  label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-  label.TextStrokeTransparency = 0.25
+  label.TextColor3 = COLORS.white
+  label.TextStrokeTransparency = 1
   label.TextSize = 12
-  label.Font = Enum.Font.GothamSemibold
+  label.Font = Enum.Font.GothamBold
   label.TextXAlignment = Enum.TextXAlignment.Left
   label.Position = UDim2.new(0, 12, 0, 0)
   label.Size = UDim2.new(1, -132, 1, 0)
   label.ZIndex = 5
   label.Parent = row
-  -- L'hover scrive sulla stessa proprieta' che usa la dissolvenza idle.
-  -- Mentre la hub e' sbiadita o in transizione l'hover viene ignorato:
-  -- altrimenti il suo tween finiva DOPO il ripristino e la riga restava
-  -- inchiodata al valore di hover (piu' scura) finche' non ci si ripassava
-  -- sopra per far scattare il MouseLeave.
   row.MouseEnter:Connect(function()
-    tween(row, {BackgroundTransparency = 0.22})
+    if edge then tween(edge, {Color = COLORS.accent, Transparency = 0.25}) end
+    tween(row, {BackgroundTransparency = 0.05})
   end)
   row.MouseLeave:Connect(function()
-    tween(row, {BackgroundTransparency = 0.3})
+    if edge then tween(edge, {Color = COLORS.line, Transparency = 0.55}) end
+    tween(row, {BackgroundTransparency = 0.12})
   end)
   return row
 end
@@ -13162,7 +13251,7 @@ function toggleRow(parent, labelText, default, order)
   corner(track, 11)
   stroke(track, COLORS.strokeSoft, 1.3, 0.4)
 
-  -- Riempimento viola che sfuma quando il toggle e' acceso
+  -- LTM grey fill when toggle on
   local fill = Instance.new("Frame")
   fill.Name = "Fill"
   fill.BackgroundColor3 = Color3.fromRGB(140, 140, 150)
@@ -13277,7 +13366,7 @@ _G.AmbitiousActionToggleRow = function(parent, labelText, default, order)
   corner(track, 11)
   stroke(track, COLORS.strokeSoft, 1.3, 0.4)
 
-  -- Riempimento viola che sfuma quando il toggle e' acceso
+  -- LTM grey fill when toggle on
   local fill = Instance.new("Frame")
   fill.Name = "Fill"
   fill.BackgroundColor3 = Color3.fromRGB(140, 140, 150)
@@ -25996,14 +26085,52 @@ end
 
   section(Settings, "INTRO", 50)
   do
-    local row, setVisual = toggleRow(Settings, "Intro", _introEnabled, 51)
+    local row, setVisual = toggleRow(Settings, "Intro (Removed)", false, 51)
+    -- K2 Theme cycle (Grey only family)
+    do
+      local trow = Instance.new("Frame")
+      trow.Size = UDim2.new(1, -8, 0, 36)
+      trow.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
+      trow.BackgroundTransparency = 0.15
+      trow.BorderSizePixel = 0
+      trow.LayoutOrder = 52
+      trow.Parent = Settings
+      pcall(corner, trow, 8)
+      local tl = Instance.new("TextLabel")
+      tl.BackgroundTransparency = 1
+      tl.Size = UDim2.new(0.55, 0, 1, 0)
+      tl.Position = UDim2.fromOffset(10, 0)
+      tl.Font = Enum.Font.GothamBold
+      tl.TextSize = 12
+      tl.TextXAlignment = Enum.TextXAlignment.Left
+      tl.TextColor3 = Color3.fromRGB(230, 230, 235)
+      tl.Text = "UI Theme"
+      tl.Parent = trow
+      local tb = Instance.new("TextButton")
+      tb.Size = UDim2.fromOffset(88, 26)
+      tb.Position = UDim2.new(1, -96, 0.5, -13)
+      tb.BackgroundColor3 = Color3.fromRGB(40, 40, 46)
+      tb.TextColor3 = Color3.fromRGB(230, 230, 235)
+      tb.Font = Enum.Font.GothamBold
+      tb.TextSize = 11
+      tb.Text = tostring(_G.K2DuelsTheme or "Grey")
+      tb.AutoButtonColor = false
+      tb.Parent = trow
+      pcall(corner, tb, 8)
+      tb.MouseButton1Click:Connect(function()
+        if _G.K2DuelsCycleTheme then
+          tb.Text = _G.K2DuelsCycleTheme()
+        end
+      end)
+    end
+
     setIntroVisual = setVisual
     local btn = row and row:FindFirstChild("ToggleButton")
     if btn then
       btn.Activated:Connect(function()
-        _introEnabled = not _introEnabled
-        if not _introEnabled then stopIntroPlayback(); stopIntroPreview() end
-        if setIntroVisual then setIntroVisual(_introEnabled) end
+        _introEnabled = false -- K2: intro permanently removed
+        stopIntroPlayback(); stopIntroPreview()
+        if setIntroVisual then setIntroVisual(false) end
         saveAmbitiousConfig()
       end)
     end
@@ -26968,7 +27095,7 @@ end
       if _G.AmbitiousApplyTitleStyle then pcall(_G.AmbitiousApplyTitleStyle, 1) end
       if _G.AmbitiousRefreshTitleStyleSelector then pcall(_G.AmbitiousRefreshTitleStyleSelector) end
       -- <<< TAB POSITION END
-      selectedIntroMusic = 1; _introEnabled = true
+      selectedIntroMusic = 1; _introEnabled = false
       headlessEnabled = false; korbloxEnabled = false
       if setIntroVisual then setIntroVisual(_introEnabled) end
       if setIntroSongVisual then setIntroSongVisual() end
@@ -28049,7 +28176,7 @@ _G.__AmbitiousDuelsRunIntro = function()
     return
   end
 
-  playIntroMusic()
+  -- playIntroMusic() disabled (K2 no music/intro)
   Main.Visible = false
   MiniFrame.Visible = false
   Main.Size = UDim2.new(0, 0, 0, 0)
@@ -29045,9 +29172,9 @@ local function makeButton(key, label, pos, onPress)
     txtGrad.Rotation = 0
     txtGrad.Transparency = NumberSequence.new(0)
     txtGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(200, 200, 210)),
-        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(120, 120, 130)),
-        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(50, 50, 60)),
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(220, 220, 225)),
+        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(160, 160, 168)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(100, 100, 108)),
     })
 
     -- Gradiente per lo SFONDO (acceso)
@@ -29077,20 +29204,20 @@ local function makeButton(key, label, pos, onPress)
     local function updateButton(state)
         if state then
             -- ON: sfondo galattico, TESTO NERO
-            btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  -- base per gradiente
+            btn.BackgroundColor3 = Color3.fromRGB(230, 230, 235)
             btn.BackgroundTransparency = 0
-            btn.TextColor3 = Color3.fromRGB(0, 0, 0)              -- TESTO NERO
-            txtGrad.Enabled = false                               -- disabilita gradiente testo
-            bgGrad.Enabled = true                                 -- abilita gradiente sfondo
-            glow.BackgroundTransparency = 0.3
+            btn.TextColor3 = Color3.fromRGB(10, 10, 14)
+            txtGrad.Enabled = false
+            bgGrad.Enabled = false
+            glow.BackgroundTransparency = 0.75
         else
             -- OFF: sfondo nero, TESTO GALATTICO
-            btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            btn.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
             btn.BackgroundTransparency = 0
-            btn.TextColor3 = Color3.fromRGB(255, 255, 255)       -- base per gradiente
-            txtGrad.Enabled = true                                -- abilita gradiente testo
-            bgGrad.Enabled = false                                -- disabilita gradiente sfondo
-            glow.BackgroundTransparency = 0.9
+            btn.TextColor3 = Color3.fromRGB(230, 230, 235)
+            txtGrad.Enabled = false
+            bgGrad.Enabled = false
+            glow.BackgroundTransparency = 1
         end
     end
 
@@ -29378,6 +29505,12 @@ end)
 local _oldLoadAmbitiousConfig = loadAmbitiousConfig
 loadAmbitiousConfig = function()
     _oldLoadAmbitiousConfig()
+    -- K2 FORCE GREY SHELL
+    pcall(function()
+      if Main then Main.BackgroundColor3 = Color3.fromRGB(14,14,18) end
+      local bi = Main and Main:FindFirstChild("CustomBackground")
+      if bi then bi.Visible=false; bi.ImageTransparency=1 end
+    end)
     -- Applica lo stato di Stretch Rez dopo il caricamento
     if _G.StretchRez and _G.StretchRez.apply then
         local idx = stretchCurrentIndex or 1
