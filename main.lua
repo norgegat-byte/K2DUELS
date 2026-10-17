@@ -925,9 +925,9 @@ print("_AdaptMain")
 									do
 										do
 											frame2.Name = "StealBar"
-											frame2.Size = UDim2.new(0, v78, 0, 54)
+											frame2.Size = UDim2.new(0, v78, 0, 48)
 											frame2.Position = UDim2.new(0.5, -140, 1, -62)
-											frame2.BackgroundColor3 = Color3.fromRGB(0, 0, v77[164])
+											frame2.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 											frame2.BorderSizePixel = 0
 											frame2.Active = v77[85]
 											frame2.ZIndex = 50
@@ -1039,9 +1039,10 @@ print("_AdaptMain")
 											Instance.new("UICorner", frame2).CornerRadius = UDim.new(0, 12)
 											uiStroke = Instance.new("UIStroke", frame2)
 											uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-											uiStroke.Thickness = v77[69]
-											uiStroke.Color = color3
-											uiStroke.Transparency = 1
+											uiStroke.Thickness = 1.15
+											uiStroke.Color = Color3.fromRGB(160, 160, 170)
+											uiStroke.Transparency = 0.35
+											-- K2: keep visible silver outline (was fully transparent)
 											textLabel = Instance.new("TextLabel", frame2)
 											textLabel.Size = UDim2.new(0, 80, 0, 18)
 											textLabel.Position = UDim2.new(0, 10, 0, 4)
@@ -1084,6 +1085,7 @@ print("_AdaptMain")
 											textLabel3.Position = UDim2.new(v77[164], 10, v77[164], 22)
 											textLabel3.BackgroundTransparency = 1
 											textLabel3.Text = "discord.gg/k2scripts"
+											textLabel3.TextTransparency = 0.25
 											textLabel3.TextColor3 = Color3.fromRGB(255, v77[51], 255)
 											textLabel3.TextTransparency = 0.25
 											textLabel3.Font = Enum.Font.GothamMedium
@@ -12213,7 +12215,7 @@ print("_AdaptMain")
 								local instance2 = Instance.new(v77[145])
 								instance2.Name = "IntroBanner"
 								instance2.BackgroundTransparency = v77[69]
-								instance2.Image = "rbxassetid://135088241492683"
+								instance2.Image = ""
 								instance2.ImageColor3 = Color3.fromRGB(255, v77[51], 255)
 								instance2:SetAttribute("_NoAdaptTheme", true)
 								instance2.ImageTransparency = 1
@@ -13228,25 +13230,63 @@ print("_AdaptMain")
 							local frame3
 							frame3 = Instance.new("Frame")
 							frame3.Name = "K2FloatOpen"
-							frame3.BackgroundColor3 = Color3.fromRGB(v77[164], 0, v77[164])
-							frame3.BackgroundTransparency = v77[164]
+							frame3.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+							frame3.BackgroundTransparency = 0.08
 							frame3.BorderSizePixel = 0
-							frame3.Size = UDim2.new(0, 110, 0, 32)
+							frame3.Size = UDim2.new(0, 96, 0, 36)
 							frame3.ClipsDescendants = true
 							frame3.Visible = false
 							frame3.ZIndex = 500
 							frame3.Active = true
 							frame3.Parent = screenGui
 							Instance.new("UICorner", frame3).CornerRadius = UDim.new(1, 0)
+							do
+								local fst = Instance.new("UIStroke", frame3)
+								fst.Color = Color3.fromRGB(180, 180, 190)
+								fst.Thickness = 1.2
+								fst.Transparency = 0.35
+							end
 							local imageButton
 							imageButton = Instance.new("ImageButton", frame3)
-							imageButton.Size = UDim2.new(1, -2, v77[69], -2)
-							imageButton.Position = UDim2.new(0, 1, v77[164], 1)
+							imageButton.Size = UDim2.new(1, -2, 1, -2)
+							imageButton.Position = UDim2.new(0, 1, 0, 1)
 							imageButton.BackgroundTransparency = 1
-							imageButton.Image = "rbxassetid://135088241492683"
-							imageButton.ScaleType = Enum.ScaleType.Fit
+							imageButton.Image = ""
 							imageButton.AutoButtonColor = false
 							imageButton.ZIndex = 501
+							-- K2 branding (not Adapt logo)
+							do
+								local badge = Instance.new("Frame")
+								badge.Size = UDim2.fromOffset(22, 22)
+								badge.Position = UDim2.fromOffset(8, 7)
+								badge.BackgroundColor3 = Color3.fromRGB(40, 40, 46)
+								badge.BorderSizePixel = 0
+								badge.ZIndex = 502
+								badge.Parent = frame3
+								Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 7)
+								local bst = Instance.new("UIStroke", badge)
+								bst.Color = Color3.fromRGB(200, 200, 210)
+								bst.Thickness = 1
+								bst.Transparency = 0.3
+								local bt = Instance.new("TextLabel", badge)
+								bt.BackgroundTransparency = 1
+								bt.Size = UDim2.fromScale(1, 1)
+								bt.Font = Enum.Font.GothamBlack
+								bt.TextSize = 10
+								bt.Text = "K2"
+								bt.TextColor3 = Color3.fromRGB(240, 240, 245)
+								bt.ZIndex = 503
+								local title = Instance.new("TextLabel", frame3)
+								title.BackgroundTransparency = 1
+								title.Position = UDim2.fromOffset(34, 0)
+								title.Size = UDim2.new(1, -40, 1, 0)
+								title.Font = Enum.Font.GothamBlack
+								title.TextSize = 13
+								title.TextXAlignment = Enum.TextXAlignment.Left
+								title.Text = "DUELS"
+								title.TextColor3 = Color3.fromRGB(235, 235, 240)
+								title.ZIndex = 502
+							end
 
 
 							print("fn60")
@@ -14518,7 +14558,7 @@ print("_AdaptMain")
 									uiScale3.Parent = textButton2
 									local canvasGroup = Instance.new("CanvasGroup")
 									canvasGroup.Name = "RoundedVisualMask"
-									canvasGroup.BackgroundColor3 = Color3.fromRGB(2, 2, v77[73])
+									canvasGroup.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 									canvasGroup.BackgroundTransparency = 0
 									canvasGroup.BorderSizePixel = 0
 									canvasGroup.Size = UDim2.fromScale(v77[69], 1)
@@ -14646,8 +14686,8 @@ print("_AdaptMain")
 										imageLabel2.ImageColor3 = flag31 and Color3.fromRGB(v77[80], 150, 158) or adaptGetButtonImageTint
 										uiStroke.Transparency = 1
 										v100.Thickness = flag30 and not flag32 and v77[118] or 1.1
-										v100.Color = flag30 and Color3.fromRGB(v77[51], 255, 255) or Color3.fromRGB(255, 255, v77[51])
-										v100.Transparency = flag32 and 1 or flag30 and v77[164] or 1
+										v100.Color = flag30 and Color3.fromRGB(220, 220, 230) or Color3.fromRGB(90, 90, 100)
+										v100.Transparency = flag32 and 1 or flag30 and 0.15 or 0.45
 										v101.Color = flag30 and v78 or v79
 										v101.Transparency = flag30 and v82 or v83
 										v99.TextColor3 = flag30 and flag32 and Color3.fromRGB(8, v77[91], v77[66]) or Color3.fromRGB(255, 255, 255)
@@ -15470,8 +15510,8 @@ print("_AdaptMain")
 							fn63(Utility, "Potato Graphics", { toggle = true })
 							fn63(Utility, "FOV Change", { toggle = v77[85] })
 							fn63(Utility, "FOV Value", { value = "120" })
-							createTextLabel(Utility, "ADAPT Skin")
-							fn63(Utility, "ADAPT Skin", { toggle = v77[85] })
+							createTextLabel(Utility, "K2 Skin")
+							fn63(Utility, "K2 Skin", { toggle = v77[85] })
 
 
 							print("fn67")
@@ -15513,7 +15553,7 @@ print("_AdaptMain")
 								local n34 = flag29 and 16 or 18
 								local gothamBlack = Enum.Font.GothamBlack
 								local text = tbl37.text
-								local adaptSkin = v92(frame4, "ADAPT SKIN", n34, UDim2.new(0, v77[164], 0, v77[70]), gothamBlack, text)
+								local adaptSkin = v92(frame4, "K2 SKIN", n34, UDim2.new(0, v77[164], 0, v77[70]), gothamBlack, text)
 								adaptSkin.ZIndex = 122
 								local v93 = tbl38.gallery(canvasGroup, frame4, adaptSkin)
 								local v94 = createTextButton(frame4, "×", v77[169])
@@ -16191,7 +16231,7 @@ print("_AdaptMain")
 									local n34 = flag29 and 15 or 17
 									local gothamBlack = Enum.Font.GothamBlack
 									local text = tbl37.text
-									local adaptMusic = v95(frame5, "ADAPT MUSIC", n34, UDim2.new(v77[164], 0, 0, 3), gothamBlack, text)
+									local adaptMusic = v95(frame5, "K2 MUSIC", n34, UDim2.new(v77[164], 0, 0, 3), gothamBlack, text)
 									adaptMusic.ZIndex = 132
 									local v96 = tbl38.gallery(canvasGroup, frame5, adaptMusic)
 									local v97 = createTextButton(frame5, "×", v77[169])
@@ -18774,14 +18814,14 @@ print("_AdaptMain")
 
 								fn80()
 
-								fn78(Utility, "ADAPT Skin", function(arg)
+								fn78(Utility, "K2 Skin", function(arg)
 									if _G._AdaptSkin then
 										_G._AdaptSkin.SetEnabled(arg)
 									end
 								end)
 
-								if _G._AdaptSkin and handlers["ADAPT Skin"] then
-									handlers["ADAPT Skin"](_G._AdaptSkin.IsEnabled(), true)
+								if _G._AdaptSkin and handlers["K2 Skin"] then
+									handlers["K2 Skin"](_G._AdaptSkin.IsEnabled(), true)
 								end
 
 
