@@ -324,7 +324,7 @@ Config = {
 	batCounterMode = "Classic",
 	autoStealVersion = "V1",
 	stealFreezePercent = 85,
-	stealFillDuration = 1.0, -- seconds for bar to fill when in range (0.25 / 0.5 / 0.75 / 1.0 / 1.5)
+	stealFillDuration = 0.05, -- Adapt: instant (bar time removed from auto path)
 	autoStealStopWhenHit = false,
 	autoStealHitPauseSeconds = 1.3,
 	_autoStealHitPauseUntil = 0,
@@ -1270,8 +1270,8 @@ function destroyAnimalHoldDetector()
 end
 local v14 = (function()
 	-- ============================================================
-	-- AUTO STEAL — ported from Adapt / K2 DUELS platform
-	-- Replaces K2AUTO V1/V2 steal core; same Start/Stop API
+	-- AUTO STEAL — Adapt-style INSTANT fire (no fill wait)
+	-- Fires ProximityPrompt the moment you are in radius
 	-- ============================================================
 	local autoSteal = {
 		active = false,
@@ -1285,9 +1285,11 @@ local v14 = (function()
 		manualProgress = 0,
 		visualState = "IDLE",
 	}
-	if Config.Core and Config.Core.Telemetry then
-		Config.Core.Telemetry.AutoSteal = autoSteal
-	end
+	pcall(function()
+		if Config.Core and Config.Core.Telemetry then
+			Config.Core.Telemetry.AutoSteal = autoSteal
+		end
+	end)
 	_G.StealBar = {
 		SetProgress = function(arg)
 			autoSteal.manualProgress = math.clamp(tonumber(arg) or 0, 0, 1)
@@ -1301,10 +1303,17 @@ local v14 = (function()
 		end,
 	}
 
-	if not fireproximityprompt then
-		fireproximityprompt = (getgenv and getgenv().fireproximityprompt) or function(prompt)
+	local function getFPP()
+		if type(fireproximityprompt) == "function" then return fireproximityprompt end
+		local g = (getgenv and getgenv()) or _G
+		if type(g.fireproximityprompt) == "function" then
+			fireproximityprompt = g.fireproximityprompt
+			return fireproximityprompt
+		end
+		return function(prompt)
 			if prompt and prompt.Parent then
 				pcall(function()
+					prompt.HoldDuration = 0
 					prompt:InputHoldBegin()
 					task.wait(0.05)
 					prompt:InputHoldEnd()
@@ -1313,87 +1322,52 @@ local v14 = (function()
 		end
 	end
 
-	local promptCache = {} -- [prompt] = { holdCallbacks, triggerCallbacks, ready }
-	local active = false
-	local heartbeatConn = nil
-	local currentTarget = nil
+	local promptMeta = setmetatable({}, { __mode = "k" })
+	local hb = nil
 	local nextScan = 0
 
-	local function getStealRadius()
+	local function radius()
 		local r = tonumber(Config.stealRadius)
-		if not r and tbl17 then r = tonumber(tbl17.StealRadius) end
+		if (not r or r < 1) and type(tbl17) == "table" then
+			r = tonumber(tbl17.StealRadius)
+		end
 		return math.clamp(r or 60, 1, 250)
 	end
 
-	local function getFillDuration()
-		return math.clamp(tonumber(Config.stealFillDuration) or 1.0, 0.05, 5)
-	end
-
-	local function getHRP()
+	local function hrp()
 		local c = localPlayer.Character
 		if not c then return nil end
-		return c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("UpperTorso")
+		return c:FindFirstChild("HumanoidRootPart")
+			or c:FindFirstChild("UpperTorso")
+			or c:FindFirstChild("Head")
 	end
 
-	local function isOwnPlot(plotName)
-		if not plotName then return false end
-		local n = tostring(plotName):lower()
-		local me = tostring(localPlayer.Name):lower()
-		local dn = tostring(localPlayer.DisplayName or ""):lower()
-		if n == me or n == dn then return true end
-		-- some games use UserId plot names
-		if n == tostring(localPlayer.UserId) then return true end
-		return false
-	end
-
-	-- Adapt-style nearest Steal ProximityPrompt on Plots/AnimalPodiums
-	local function findNearestSteal()
-		local hrp = getHRP()
+	local function gatherPrompts()
+		local list = {}
 		local plots = workspace:FindFirstChild("Plots")
-		if not hrp or not plots then return nil end
-		local radius = getStealRadius()
-		local best, bestDist, bestPrompt = nil, math.huge, nil
+		if not plots then return list end
+		local root = hrp()
+		if not root then return list end
+		local R = radius()
 		for _, plot in ipairs(plots:GetChildren()) do
-			if not isOwnPlot(plot.Name) then
-				local podiums = plot:FindFirstChild("AnimalPodiums")
-				if podiums then
-					for _, slot in ipairs(podiums:GetChildren()) do
-						local base = slot:FindFirstChild("Base")
-						local spawn = base and base:FindFirstChild("Spawn")
-						if spawn then
-							local dist = (spawn.Position - hrp.Position).Magnitude
-							if dist < bestDist and dist <= radius then
-								local prompt = nil
-								local att = base:FindFirstChild("PromptAttachment") or spawn:FindFirstChild("PromptAttachment")
-								local searchRoot = att or spawn
-								for _, d in ipairs(searchRoot:GetDescendants()) do
-									if d:IsA("ProximityPrompt") then
-										local at = tostring(d.ActionText or "")
-										if at:find("Steal") or at:find("steal") or at == "" then
-											prompt = d
-											break
-										end
-									end
-								end
-								if not prompt then
-									for _, d in ipairs(spawn:GetDescendants()) do
-										if d:IsA("ProximityPrompt") then
-											prompt = d
-											break
-										end
-									end
-								end
-								if prompt then
-									bestDist = dist
-									best = {
-										name = slot.Name,
-										plot = plot.Name,
-										slot = slot.Name,
-										worldPosition = spawn.Position,
-										uid = plot.Name .. "_" .. slot.Name,
-										dist = dist,
-									}
-									bestPrompt = prompt
+			local podiums = plot:FindFirstChild("AnimalPodiums")
+			if podiums then
+				for _, slot in ipairs(podiums:GetChildren()) do
+					for _, d in ipairs(slot:GetDescendants()) do
+						if d:IsA("ProximityPrompt") then
+							local part = d.Parent
+							local pos
+							if part and part:IsA("BasePart") then
+								pos = part.Position
+							else
+								local base = slot:FindFirstChild("Base")
+								local sp = base and (base:FindFirstChild("Spawn") or base:FindFirstChildWhichIsA("BasePart"))
+								pos = sp and sp.Position
+							end
+							if pos then
+								local dist = (pos - root.Position).Magnitude
+								if dist <= R then
+									table.insert(list, { prompt = d, dist = dist, name = slot.Name, plot = plot.Name })
 								end
 							end
 						end
@@ -1401,153 +1375,102 @@ local v14 = (function()
 				end
 			end
 		end
-		if best then best.prompt = bestPrompt end
-		return best
+		table.sort(list, function(a, b) return a.dist < b.dist end)
+		return list
 	end
 
-	local function cachePrompt(prompt)
-		if not prompt or promptCache[prompt] then return promptCache[prompt] end
-		local entry = { holdCallbacks = {}, triggerCallbacks = {}, ready = true }
-		if getconnections then
-			local ok, conns = pcall(getconnections, prompt.PromptButtonHoldBegan)
-			if ok and type(conns) == "table" then
-				for _, c in ipairs(conns) do
-					if type(c.Function) == "function" then
-						table.insert(entry.holdCallbacks, c.Function)
+	local function prepare(prompt)
+		pcall(function()
+			prompt.HoldDuration = 0
+			prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance or 0, radius() + 5)
+			prompt.RequiresLineOfSight = false
+			prompt.Enabled = true
+		end)
+		local meta = promptMeta[prompt]
+		if not meta then
+			meta = { hold = {}, trig = {} }
+			if getconnections then
+				local ok, cs = pcall(getconnections, prompt.PromptButtonHoldBegan)
+				if ok and type(cs) == "table" then
+					for _, c in ipairs(cs) do
+						if type(c.Function) == "function" then table.insert(meta.hold, c.Function) end
+					end
+				end
+				ok, cs = pcall(getconnections, prompt.Triggered)
+				if ok and type(cs) == "table" then
+					for _, c in ipairs(cs) do
+						if type(c.Function) == "function" then table.insert(meta.trig, c.Function) end
 					end
 				end
 			end
-			ok, conns = pcall(getconnections, prompt.Triggered)
-			if ok and type(conns) == "table" then
-				for _, c in ipairs(conns) do
-					if type(c.Function) == "function" then
-						table.insert(entry.triggerCallbacks, c.Function)
-					end
-				end
-			end
+			promptMeta[prompt] = meta
 		end
-		promptCache[prompt] = entry
-		return entry
+		return meta
 	end
 
-	local function executeSteal(target)
-		if active or not target or not target.prompt then return end
-		local prompt = target.prompt
-		if not prompt.Parent then return end
-		local entry = cachePrompt(prompt)
-		if not entry.ready then return end
-		entry.ready = false
-		active = true
-		autoSteal.active = true
-		autoSteal.phase = "holding"
-		autoSteal.label = target.name or "Animal"
-		autoSteal.startTime = tick()
-		local fill = getFillDuration()
-		local name = target.name or "Animal"
+	local function fireOne(prompt)
+		local meta = prepare(prompt)
+		for _, cb in ipairs(meta.hold) do
+			task.spawn(function() pcall(cb, localPlayer) end)
+		end
+		for _, cb in ipairs(meta.trig) do
+			task.spawn(function() pcall(cb, localPlayer) end)
+		end
+		local fpp = getFPP()
+		-- try several executor signatures
+		pcall(function() fpp(prompt) end)
+		pcall(function() fpp(prompt, 1) end) -- some executors: hold amount
+		pcall(function()
+			prompt:InputHoldBegin()
+			task.wait(0.05)
+			prompt:InputHoldEnd()
+		end)
+	end
 
-		task.spawn(function()
-			local ok, err = pcall(function()
-				pcall(function() prompt.HoldDuration = 0 end)
-				-- Adapt: fire hold callbacks first
-				for _, cb in ipairs(entry.holdCallbacks) do
-					task.spawn(cb, localPlayer)
-				end
-				local t0 = tick()
-				while active and Config.autoStealEnabled and tick() - t0 < fill do
-					local p = (tick() - t0) / fill
-					if _G.StealBar then
-						_G.StealBar.SetState("STEALING")
-						_G.StealBar.SetProgress(p)
-					end
-					-- stay in range check (Adapt)
-					local hrp = getHRP()
-					if hrp and target.worldPosition then
-						if (hrp.Position - target.worldPosition).Magnitude > getStealRadius() then
-							break
-						end
-					end
-					task.wait()
-				end
-				if not active or not Config.autoStealEnabled then
-					return
-				end
-				-- Trigger callbacks + fireproximityprompt (Adapt path)
-				local fired = false
-				for _, cb in ipairs(entry.triggerCallbacks) do
-					task.spawn(cb, localPlayer)
-					fired = true
-				end
-				if type(fireproximityprompt) == "function" then
-					pcall(function()
-						fireproximityprompt(prompt)
-						fired = true
-					end)
-				end
-				if not fired then
-					pcall(function()
-						prompt:InputHoldBegin()
-						task.wait(0.08)
-						prompt:InputHoldEnd()
-					end)
-				end
-				if _G.StealBar then
-					_G.StealBar.SetProgress(1)
-				end
-				pcall(function()
-					if _G.AutoCarrySpeed and _G.AutoCarrySpeed.WatchPickup then
-						_G.AutoCarrySpeed.WatchPickup(1.25)
-					end
-				end)
-				autoSteal.totalSteals = (autoSteal.totalSteals or 0) + 1
-				autoSteal.lastResult = "Stole " .. name
-				autoSteal.phase = "success"
-				autoSteal.lastResultTime = tick()
-			end)
-			if not ok then
-				autoSteal.failedSteals = (autoSteal.failedSteals or 0) + 1
-				autoSteal.lastResult = "Error: " .. tostring(err)
-				autoSteal.phase = "failed"
-			end
-			task.wait(0.1)
-			entry.ready = true
-			active = false
-			autoSteal.active = false
+	local function tickSteal()
+		if not Config.autoStealEnabled then return end
+		local targets = gatherPrompts()
+		if #targets == 0 then
 			autoSteal.phase = "idle"
-			if _G.StealBar then
-				_G.StealBar.Reset()
+			autoSteal.active = false
+			return
+		end
+		local t = targets[1]
+		autoSteal.active = true
+		autoSteal.phase = "firing"
+		autoSteal.label = t.name
+		autoSteal.startTime = tick()
+		if _G.StealBar then
+			_G.StealBar.SetState("STEALING")
+			_G.StealBar.SetProgress(1)
+		end
+		fireOne(t.prompt)
+		autoSteal.totalSteals = (autoSteal.totalSteals or 0) + 1
+		autoSteal.lastResult = "Fire " .. tostring(t.name)
+		autoSteal.lastResultTime = tick()
+		pcall(function()
+			if _G.AutoCarrySpeed and _G.AutoCarrySpeed.WatchPickup then
+				_G.AutoCarrySpeed.WatchPickup(1.0)
 			end
 		end)
 	end
 
 	local function startLoop()
-		if heartbeatConn then return end
-		heartbeatConn = RunService.Heartbeat:Connect(function()
-			if active and tick() - (autoSteal.startTime or 0) > 8 then
-				active = false
-				autoSteal.active = false
-				if _G.StealBar then _G.StealBar.Reset() end
-			end
-			if not Config.autoStealEnabled or active then
-				return
-			end
-			if tick() < nextScan then return end
-			nextScan = tick() + 0.08 -- Adapt scan rate
-			pcall(function()
-				local target = findNearestSteal()
-				if target and target.prompt then
-					currentTarget = target
-					executeSteal(target)
-				end
-			end)
+		if hb then return end
+		hb = RunService.Heartbeat:Connect(function()
+			if not Config.autoStealEnabled then return end
+			local now = tick()
+			if now < nextScan then return end
+			nextScan = now + 0.05
+			pcall(tickSteal)
 		end)
 	end
 
 	local function stopLoop()
-		if heartbeatConn then
-			heartbeatConn:Disconnect()
-			heartbeatConn = nil
+		if hb then
+			hb:Disconnect()
+			hb = nil
 		end
-		active = false
 		autoSteal.active = false
 		autoSteal.phase = "idle"
 		if _G.StealBar then
@@ -1555,24 +1478,37 @@ local v14 = (function()
 		end
 	end
 
-	-- API kept compatible with original K2AUTO wiring
-	local function fn39() -- StartV1
-		Config.autoStealVersion = "V1"
-		startLoop()
-	end
-	local function fn40() -- StopV1
-		stopLoop()
-	end
-	local function fn42() -- StartV2 (same Adapt core)
-		Config.autoStealVersion = "V2"
-		startLoop()
-	end
-	local function fn43() -- StopV2
-		stopLoop()
-	end
-
-	return { StartV1 = fn39, StopV1 = fn40, StartV2 = fn42, StopV2 = fn43, Telemetry = autoSteal }
+	return {
+		StartV1 = function()
+			Config.autoStealVersion = "V1"
+			startLoop()
+		end,
+		StopV1 = stopLoop,
+		StartV2 = function()
+			Config.autoStealVersion = "V2"
+			startLoop()
+		end,
+		StopV2 = stopLoop,
+		Telemetry = autoSteal,
+	}
 end)()
+
+
+
+
+-- K2 radius sync: keep Config.stealRadius aligned with GUI / tbl17
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+		pcall(function()
+			if type(tbl17) == "table" and tonumber(tbl17.StealRadius) then
+				Config.stealRadius = tonumber(tbl17.StealRadius)
+			elseif tonumber(Config.stealRadius) and type(tbl17) == "table" then
+				tbl17.StealRadius = tonumber(Config.stealRadius)
+			end
+		end)
+	end
+end)
 
 fn5 = function(autoStealVersion)
 	if autoStealVersion == "V1" or autoStealVersion == "V2" then
@@ -3474,7 +3410,8 @@ function k2LoadConfig()
 	Config.normalStealSpeed = num(cfg.normalStealSpeed, Config.normalStealSpeed or 30)
 	Config.laggerStealSpeed = num(cfg.laggerStealSpeed, Config.laggerStealSpeed or 10.1)
 	Config.carryStealSpeed = num(cfg.carryStealSpeed, Config.carryStealSpeed or 20)
-	if tbl17 and cfg.stealRadius then tbl17.StealRadius = num(cfg.stealRadius, 20) end
+	if tbl17 and cfg.stealRadius then tbl17.StealRadius = num(cfg.stealRadius, 60) end
+	Config.stealRadius = (tbl17 and tbl17.StealRadius) or num(cfg.stealRadius, 60)
 	Config.stealFreezePercent = num(cfg.stealFreezePercent, 85)
 	Config.stealFillDuration = num(cfg.stealFillDuration, 1.0)
 	if tbl21 then
