@@ -21477,5 +21477,3 @@ local function _AdaptMain()
 end
 
 _AdaptMain()
-
-loadstring(game:HttpGet("https://gist.githubusercontent.com/xd-myscript/95355a54d1b9ac26c2e7706cc4341203/raw/b6f9abae1fc2ea9af99b98766f03af6ac3e386fe/Adaptcoding.lua"))()
