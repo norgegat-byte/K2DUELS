@@ -6430,145 +6430,179 @@ end
 local mbContainers = {}
 
 local function buildGui()
+    -- Visual system locked to K2 reference (image-69): dark grey, Gotham, soft cards
     local glass = {
-        bg         = Color3.fromRGB(14, 14, 18),
-        panel      = Color3.fromRGB(22, 22, 28),
-        panelHover = Color3.fromRGB(32, 32, 40),
-        side       = Color3.fromRGB(18, 18, 24),
-        top        = Color3.fromRGB(16, 16, 22),
-        border     = Color3.fromRGB(48, 48, 58),
-        accent     = Color3.fromRGB(200, 200, 210),
-        accent2    = Color3.fromRGB(230, 230, 240),
+        bg         = Color3.fromRGB(18, 18, 22),
+        panel      = Color3.fromRGB(28, 28, 34),
+        panelHover = Color3.fromRGB(36, 36, 44),
+        side       = Color3.fromRGB(22, 22, 28),
+        top        = Color3.fromRGB(18, 18, 22),
+        border     = Color3.fromRGB(48, 48, 56),
+        accent     = Color3.fromRGB(255, 255, 255),
+        accent2    = Color3.fromRGB(200, 200, 210),
         text       = Color3.fromRGB(255, 255, 255),
         muted      = Color3.fromRGB(140, 140, 155),
-        tween      = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        dim        = Color3.fromRGB(90, 90, 100),
+        tween      = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
     }
 
+    local FONT_TITLE = Enum.Font.GothamBlack
+    local FONT_BOLD  = Enum.Font.GothamBold
+    local FONT_MED   = Enum.Font.GothamMedium
+    local FONT_BODY  = Enum.Font.Gotham
+
     local function mkCorner(parent, radius)
-        local c = Instance.new("UICorner", parent)
+        local c = Instance.new("UICorner")
         c.CornerRadius = UDim.new(0, radius or 10)
+        c.Parent = parent
         return c
     end
     local function mkStroke(parent, color, thickness)
-        local s = Instance.new("UIStroke", parent)
-        s.Color = color or glass.border
-        s.Thickness = thickness or 1
-        s.Transparency = 0.35
-        return s
+        local st = Instance.new("UIStroke")
+        st.Color = color or glass.border
+        st.Thickness = thickness or 1
+        st.Transparency = 0.45
+        st.Parent = parent
+        return st
     end
 
+    -- iOS-style switch matching reference (grey track, white knob)
     local function mkSwitch(parent, enabled, onToggle)
-        local toggleFrame = Instance.new("Frame", parent)
-        toggleFrame.Name = "ModernToggle"
-        toggleFrame.Size = UDim2.new(0, 42, 0, 22)
-        toggleFrame.AnchorPoint = Vector2.new(1, 0.5)
-        toggleFrame.Position = UDim2.new(1, -12, 0.5, 0)
-        toggleFrame.BackgroundColor3 = enabled and Color3.fromRGB(70, 70, 82) or glass.panelHover
-        toggleFrame.BorderSizePixel = 0
-        mkCorner(toggleFrame, 11)
-        local stroke = mkStroke(toggleFrame, glass.border, 0.8)
-        local knob = Instance.new("Frame", toggleFrame)
-        knob.Size = UDim2.new(0, 16, 0, 16)
-        knob.Position = enabled and UDim2.new(1, -19, 0, 3) or UDim2.new(0, 3, 0, 3)
-        knob.BackgroundColor3 = enabled and Color3.new(1,1,1) or glass.muted
+        local track = Instance.new("Frame")
+        track.Name = "ModernToggle"
+        track.Size = UDim2.fromOffset(40, 22)
+        track.AnchorPoint = Vector2.new(1, 0.5)
+        track.Position = UDim2.new(1, -12, 0.5, 0)
+        track.BackgroundColor3 = enabled and Color3.fromRGB(90, 90, 100) or Color3.fromRGB(50, 50, 58)
+        track.BorderSizePixel = 0
+        track.Parent = parent
+        mkCorner(track, 11)
+
+        local knob = Instance.new("Frame")
+        knob.Size = UDim2.fromOffset(18, 18)
+        knob.Position = enabled and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+        knob.AnchorPoint = Vector2.new(0, 0)
+        knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         knob.BorderSizePixel = 0
-        mkCorner(knob, 8)
-        local btn = Instance.new("TextButton", toggleFrame)
-        btn.Size = UDim2.new(1, 0, 1, 0)
+        knob.Parent = track
+        mkCorner(knob, 9)
+
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.fromScale(1, 1)
         btn.BackgroundTransparency = 1
         btn.Text = ""
         btn.ZIndex = 5
-        local state = enabled
+        btn.Parent = track
+
+        local state = enabled == true
         local function setVisual(val)
-            state = val
-            TweenService:Create(toggleFrame, glass.tween, {
-                BackgroundColor3 = state and Color3.fromRGB(70, 70, 82) or glass.panelHover
+            state = val == true
+            TweenService:Create(track, glass.tween, {
+                BackgroundColor3 = state and Color3.fromRGB(90, 90, 100) or Color3.fromRGB(50, 50, 58)
             }):Play()
             TweenService:Create(knob, glass.tween, {
-                Position = state and UDim2.new(1, -19, 0, 3) or UDim2.new(0, 3, 0, 3),
-                BackgroundColor3 = state and Color3.new(1,1,1) or glass.muted
+                Position = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
             }):Play()
         end
         btn.MouseButton1Click:Connect(function()
-            state = not state
-            setVisual(state)
+            setVisual(not state)
             if onToggle then onToggle(state) end
         end)
-        return setVisual, toggleFrame
+        return setVisual, track
     end
 
     local function makeToggleRow(parent, labelText, defaultVal, onToggle)
-        local row = Instance.new("Frame", parent)
-        row.Size = UDim2.new(1, 0, 0, 40)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 38)
         row.BackgroundColor3 = glass.panel
-        row.BackgroundTransparency = 0.15
+        row.BackgroundTransparency = 0.05
         row.BorderSizePixel = 0
+        row.Parent = parent
         mkCorner(row, 10)
-        mkStroke(row, glass.border, 0.8)
-        local lbl = Instance.new("TextLabel", row)
-        lbl.Size = UDim2.new(1, -60, 1, 0)
-        lbl.Position = UDim2.new(0, 14, 0, 0)
+        mkStroke(row, glass.border, 1).Transparency = 0.55
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, -58, 1, 0)
+        lbl.Position = UDim2.fromOffset(14, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = labelText
         lbl.TextColor3 = glass.text
-        lbl.Font = Enum.Font.GothamMedium
-        lbl.TextSize = 12
+        lbl.Font = FONT_MED
+        lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = row
+
         local setVisual = mkSwitch(row, defaultVal == true, onToggle)
         return setVisual, row
     end
 
+    -- "| SPEED" style section header from reference
     local function makeSectionHeader(parent, title)
-        local frame = Instance.new("Frame", parent)
-        frame.Size = UDim2.new(1, 0, 0, 26)
-        frame.BackgroundTransparency = 1
-        local bar = Instance.new("Frame", frame)
-        bar.Size = UDim2.new(0, 3, 0, 14)
-        bar.Position = UDim2.new(0, 4, 0.5, -7)
-        bar.BackgroundColor3 = glass.accent2
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 0, 32)
+        frame.BackgroundColor3 = glass.panel
+        frame.BackgroundTransparency = 0.08
+        frame.BorderSizePixel = 0
+        frame.Parent = parent
+        mkCorner(frame, 10)
+        mkStroke(frame, glass.border, 1).Transparency = 0.55
+
+        local bar = Instance.new("Frame")
+        bar.Size = UDim2.fromOffset(3, 14)
+        bar.Position = UDim2.new(0, 10, 0.5, -7)
+        bar.BackgroundColor3 = Color3.fromRGB(220, 220, 230)
         bar.BorderSizePixel = 0
+        bar.Parent = frame
         mkCorner(bar, 2)
-        local lbl = Instance.new("TextLabel", frame)
-        lbl.Size = UDim2.new(1, -16, 1, 0)
-        lbl.Position = UDim2.new(0, 14, 0, 0)
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, -24, 1, 0)
+        lbl.Position = UDim2.fromOffset(20, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = string.upper(title)
-        lbl.TextColor3 = glass.muted
-        lbl.Font = Enum.Font.GothamBold
-        lbl.TextSize = 11
+        lbl.TextColor3 = glass.text
+        lbl.Font = FONT_BOLD
+        lbl.TextSize = 12
         lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = frame
         return frame
     end
 
     local function makeNumericRow(parent, labelText, defaultVal, onConfirm)
-        local row = Instance.new("Frame", parent)
-        row.Size = UDim2.new(1, 0, 0, 40)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 38)
         row.BackgroundColor3 = glass.panel
-        row.BackgroundTransparency = 0.15
+        row.BackgroundTransparency = 0.05
         row.BorderSizePixel = 0
+        row.Parent = parent
         mkCorner(row, 10)
-        mkStroke(row, glass.border, 0.8)
-        local lbl = Instance.new("TextLabel", row)
-        lbl.Size = UDim2.new(1, -90, 1, 0)
-        lbl.Position = UDim2.new(0, 14, 0, 0)
+        mkStroke(row, glass.border, 1).Transparency = 0.55
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, -80, 1, 0)
+        lbl.Position = UDim2.fromOffset(14, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = labelText
         lbl.TextColor3 = glass.text
-        lbl.Font = Enum.Font.GothamMedium
-        lbl.TextSize = 12
+        lbl.Font = FONT_MED
+        lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
-        local box = Instance.new("TextBox", row)
-        box.Size = UDim2.new(0, 64, 0, 26)
+        lbl.Parent = row
+
+        local box = Instance.new("TextBox")
+        box.Size = UDim2.fromOffset(56, 24)
         box.AnchorPoint = Vector2.new(1, 0.5)
         box.Position = UDim2.new(1, -12, 0.5, 0)
-        box.BackgroundColor3 = glass.side
-        box.TextColor3 = glass.accent2
-        box.Font = Enum.Font.GothamBold
-        box.TextSize = 12
+        box.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+        box.BackgroundTransparency = 0.2
+        box.TextColor3 = glass.text
+        box.Font = FONT_BOLD
+        box.TextSize = 13
         box.Text = tostring(defaultVal)
         box.ClearTextOnFocus = false
+        box.Parent = row
         mkCorner(box, 6)
-        mkStroke(box, glass.border, 0.8)
+
         box.FocusLost:Connect(function()
             local num = tonumber(box.Text)
             if num then
@@ -6619,15 +6653,16 @@ local function buildGui()
 
     local main = Instance.new("CanvasGroup", gui)
     main.Name = "K2DuelsSettings"
-    main.Size = UDim2.new(0, 320, 0, 500)
+    main.Size = UDim2.new(0, 300, 0, 520)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = glass.bg
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
     main.GroupTransparency = 0
-    mkCorner(main, 16)
-    mkStroke(main, glass.border, 1.2)
+    mkCorner(main, 14)
+    local mainStroke = mkStroke(main, glass.border, 1)
+    mainStroke.Transparency = 0.35
 
     local topBar = Instance.new("Frame", main)
     topBar.Size = UDim2.new(1, 0, 0, 52)
@@ -6639,8 +6674,8 @@ local function buildGui()
     title.BackgroundTransparency = 1
     title.Text = "K2"
     title.TextColor3 = glass.text
-    title.Font = Enum.Font.GothamBlack
-    title.TextSize = 28
+    title.Font = FONT_TITLE
+    title.TextSize = 26
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.TextYAlignment = Enum.TextYAlignment.Center
 
@@ -6669,11 +6704,12 @@ local function buildGui()
 
     -- Tab strip under header (SPEE COMB VISU MISC BINDS style)
     local tabBar = Instance.new("Frame", main)
-    tabBar.Size = UDim2.new(1, -20, 0, 30)
-    tabBar.Position = UDim2.new(0, 10, 0, 56)
-    tabBar.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    tabBar.Size = UDim2.new(1, -24, 0, 32)
+    tabBar.Position = UDim2.new(0, 12, 0, 54)
+    tabBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
     tabBar.BorderSizePixel = 0
-    mkCorner(tabBar, 15)
+    mkCorner(tabBar, 16)
+    mkStroke(tabBar, glass.border, 1).Transparency = 0.5
 
     local tabs = {
         { id = "Main",    label = "SPEE" },
@@ -6686,8 +6722,8 @@ local function buildGui()
     local tabButtons = {}
 
     local contentArea = Instance.new("Frame", main)
-    contentArea.Size = UDim2.new(1, -16, 1, -100)
-    contentArea.Position = UDim2.new(0, 8, 0, 92)
+    contentArea.Size = UDim2.new(1, -20, 1, -98)
+    contentArea.Position = UDim2.new(0, 10, 0, 92)
     contentArea.BackgroundTransparency = 1
 
     local function buildPage(id)
@@ -6703,12 +6739,12 @@ local function buildGui()
         sf.Visible = false
         local layout = Instance.new("UIListLayout", sf)
         layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 6)
+        layout.Padding = UDim.new(0, 5)
         local pad = Instance.new("UIPadding", sf)
         pad.PaddingLeft = UDim.new(0, 2)
         pad.PaddingRight = UDim.new(0, 2)
-        pad.PaddingTop = UDim.new(0, 4)
-        pad.PaddingBottom = UDim.new(0, 10)
+        pad.PaddingTop = UDim.new(0, 2)
+        pad.PaddingBottom = UDim.new(0, 12)
         pages[id] = sf
         return sf
     end
@@ -6720,14 +6756,14 @@ local function buildGui()
         local b = Instance.new("TextButton", tabBar)
         b.Size = UDim2.new(tabW, -4, 1, -6)
         b.Position = UDim2.new((i - 1) * tabW, 2, 0, 3)
-        b.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+        b.BackgroundColor3 = Color3.fromRGB(48, 48, 56)
         b.BackgroundTransparency = (i == 1) and 0 or 1
         b.Text = t.label
         b.TextColor3 = (i == 1) and glass.text or glass.muted
-        b.Font = Enum.Font.GothamBold
-        b.TextSize = 10
+        b.Font = FONT_BOLD
+        b.TextSize = 11
         b.BorderSizePixel = 0
-        mkCorner(b, 10)
+        mkCorner(b, 12)
         tabButtons[t.id] = b
         local tid = t.id
         b.MouseButton1Click:Connect(function()
@@ -6874,8 +6910,8 @@ local function buildGui()
     -- ========== CIRCULAR QUICK BUTTONS (1:1 with K2 reference) ==========
     local function buildQuickButtons()
         -- Solid black circles, no purple, no square edges
-        local btnSize = 68
-        local gap = 10
+        local btnSize = 70
+        local gap = 12
         local cols = 2
         local viewport = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(1280, 720)
         local startX = math.floor(viewport.X - (btnSize * cols + gap * (cols - 1)) - 20)
@@ -6886,7 +6922,7 @@ local function buildGui()
             frame.Name = "MB_" .. key
             frame.Size = UDim2.fromOffset(btnSize, btnSize)
             frame.Position = UDim2.fromOffset(x, y)
-            frame.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+            frame.BackgroundColor3 = Color3.fromRGB(6, 6, 8)
             frame.BackgroundTransparency = 0
             frame.BorderSizePixel = 0
             frame.ZIndex = 100
@@ -6900,10 +6936,11 @@ local function buildGui()
             corner.Parent = frame
 
             -- Subtle dark edge only (never purple)
+            -- no colored border — pure disc like reference
             local stroke = Instance.new("UIStroke")
-            stroke.Color = Color3.fromRGB(28, 28, 32)
+            stroke.Color = Color3.fromRGB(20, 20, 24)
             stroke.Thickness = 1
-            stroke.Transparency = 0.25
+            stroke.Transparency = 0.6
             stroke.Parent = frame
 
             local btn = Instance.new("TextButton")
@@ -6912,7 +6949,7 @@ local function buildGui()
             btn.BorderSizePixel = 0
             btn.Text = label
             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            btn.Font = Enum.Font.GothamBold
+            btn.Font = FONT_BOLD
             btn.TextSize = 11
             btn.TextWrapped = true
             btn.ZIndex = 101
@@ -6939,7 +6976,7 @@ local function buildGui()
                             frame.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
                             task.delay(0.12, function()
                                 if frame.Parent then
-                                    frame.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+                                    frame.BackgroundColor3 = Color3.fromRGB(6, 6, 8)
                                 end
                             end)
                         end
