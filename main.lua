@@ -1,9 +1,10 @@
 --[[
     K2 Duels
-    FUNCTIONS = original M10RU Duels (all logic kept)
-    GUI = K2 dark panel + circular quick buttons (1MB K2 look)
-    Branding: K2 / discord.gg/k2scripts
+    Branding: discord.gg/k2scripts
+    Functions: full Duels feature set (auto grab, combat, paths, anti die, etc.)
+    UI: grey glass K2 theme — no legacy artwork / purple branding
 ]]
+
 repeat task.wait() until game:IsLoaded()
 
 -- ========================================================================
@@ -275,22 +276,22 @@ local function getCharData()
 end
 
 -- ========================================================================
--- SHARED PURPLE THEME + INTERRUPTIBLE UI MOTION (visuals only, never physics)
+-- SHARED GREY THEME + INTERRUPTIBLE UI MOTION (visuals only, never physics)
 -- ========================================================================
 
 local DEFAULT_THEME = {
-    background = Color3.fromRGB(14, 14, 18),
-    panel = Color3.fromRGB(22, 22, 28),
-    button = Color3.fromRGB(32, 32, 40),
-    track = Color3.fromRGB(40, 40, 50),
-    border = Color3.fromRGB(70, 70, 82),
-    deep = Color3.fromRGB(55, 55, 65),
-    accent = Color3.fromRGB(220, 220, 230),
-    light = Color3.fromRGB(245, 245, 250),
-    text = Color3.fromRGB(255, 255, 255),
-    muted = Color3.fromRGB(160, 160, 175),
-    dim = Color3.fromRGB(110, 110, 125),
-    hover = Color3.fromRGB(45, 45, 55),
+    background = Color3.fromRGB(12, 13, 16),
+    panel = Color3.fromRGB(18, 19, 24),
+    button = Color3.fromRGB(28, 30, 36),
+    track = Color3.fromRGB(36, 38, 46),
+    border = Color3.fromRGB(140, 148, 165),
+    deep = Color3.fromRGB(90, 96, 112),
+    accent = Color3.fromRGB(200, 208, 220),
+    light = Color3.fromRGB(235, 238, 245),
+    text = Color3.fromRGB(248, 250, 255),
+    muted = Color3.fromRGB(160, 168, 184),
+    dim = Color3.fromRGB(110, 118, 132),
+    hover = Color3.fromRGB(42, 46, 56),
 }
 
 local UI = {
@@ -299,19 +300,20 @@ local UI = {
     visibility = setmetatable({}, {__mode = "k"}),
     rows = setmetatable({}, {__mode = "k"}),
     theme = setmetatable({
-        background = Color3.fromRGB(14, 14, 18),
-        panel = Color3.fromRGB(22, 22, 28),
-        button = Color3.fromRGB(32, 32, 40),
-        track = Color3.fromRGB(40, 40, 50),
-        border = Color3.fromRGB(70, 70, 82),
-        deep = Color3.fromRGB(55, 55, 65),
-        accent = Color3.fromRGB(220, 220, 230),
-        light = Color3.fromRGB(245, 245, 250),
-        text = Color3.fromRGB(255, 255, 255),
-        muted = Color3.fromRGB(160, 160, 175),
-        dim = Color3.fromRGB(110, 110, 125),
-        hover = Color3.fromRGB(45, 45, 55),
-    }, {__index = function(t, k) return DEFAULT_THEME[k] or Color3.fromRGB(220, 220, 230) end}),
+        -- K2 grey glass palette
+        background = Color3.fromRGB(12, 13, 16),
+        panel = Color3.fromRGB(18, 19, 24),
+        button = Color3.fromRGB(28, 30, 36),
+        track = Color3.fromRGB(36, 38, 46),
+        border = Color3.fromRGB(140, 148, 165),
+        deep = Color3.fromRGB(90, 96, 112),
+        accent = Color3.fromRGB(200, 208, 220),
+        light = Color3.fromRGB(235, 238, 245),
+        text = Color3.fromRGB(248, 250, 255),
+        muted = Color3.fromRGB(160, 168, 184),
+        dim = Color3.fromRGB(110, 118, 132),
+        hover = Color3.fromRGB(42, 46, 56),
+    }, {__index = function(t, k) return DEFAULT_THEME[k] or Color3.fromRGB(200, 208, 220) end}),
 }
 do
     local runtimeEnvironment = _G
@@ -320,7 +322,7 @@ do
         if ok and type(environment) == "table" then runtimeEnvironment = environment end
     end
     local runtimeKey = "__K2_DUELS_RUNTIME"
-    local previous = runtimeEnvironment[runtimeKey] or runtimeEnvironment["__K2_GREY_RUNTIME"]
+    local previous = runtimeEnvironment[runtimeKey] or runtimeEnvironment["__K2_GREY_SMOOTH_RUNTIME"]
     if type(previous) == "table" and type(previous.destroy) == "function" then pcall(previous.destroy) end
     runtimeEnvironment[runtimeKey] = UI
 
@@ -757,7 +759,7 @@ local Grab = {
     -- the last frame. The fill is capped before the opaque stats plate.
     perf = {elapsed = 0, frames = 0, fps = 0, ping = 0, pingAt = 0},
     visualFillLimit = 0.70,
-    purple = UI.theme,
+    grey = UI.theme,
 }
 local refreshSemiUI = nil
 
@@ -5905,7 +5907,7 @@ do
                 loadingLbl.Position = UDim2.new(0, 0, 0.5, -10)
                 loadingLbl.BackgroundTransparency = 1
                 loadingLbl.Text = "LOADING..."
-                loadingLbl.TextColor3 = Color3.fromRGB(245, 245, 250)
+                loadingLbl.TextColor3 = Color3.fromRGB(235, 238, 245)
                 loadingLbl.Font = Enum.Font.GothamBlack
                 loadingLbl.TextSize = 12
                 loadingLbl.ZIndex = 46
@@ -6421,7 +6423,7 @@ local function toggleLaggerMode()
 end
 
 -- ========================================================================
--- USER INTERFACE (K2 DUELS PURPLE / SMOOTH UI)
+-- USER INTERFACE (K2 DUELS GREY GLASS)
 -- ========================================================================
 local mbContainers = {}
 local mbLocked = false
@@ -6472,7 +6474,7 @@ local function buildGui()
 
     local main = Instance.new("CanvasGroup", gui)
     main.Name = "K2DuelsSettings"
-    main.Size = UDim2.new(0, 300, 0, 480)
+    main.Size = UDim2.new(0, 310, 0, 520)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = BG
@@ -6480,7 +6482,7 @@ local function buildGui()
     main.ClipsDescendants = true
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 18)
     local mainStroke = Instance.new("UIStroke", main)
-    mainStroke.Color = Color3.fromRGB(48, 48, 56)
+    mainStroke.Color = Color3.fromRGB(200, 208, 220)
     mainStroke.Thickness = 1.6
     mainStroke.Transparency = 0.15
 
@@ -6508,8 +6510,8 @@ local function buildGui()
         end
         function Layout.mainSize(factor)
             local view = Layout.viewport()
-            return UDim2.fromOffset(math.min(math.floor(300 * factor + 0.5), math.max(100, view.X - 24)),
-                math.min(math.floor(480 * factor + 0.5), math.max(140, view.Y - 24)))
+            return UDim2.fromOffset(math.min(math.floor(310 * factor + 0.5), math.max(100, view.X - 24)),
+                math.min(math.floor(520 * factor + 0.5), math.max(140, view.Y - 24)))
         end
         function Layout.clampMain(position, size)
             local view = Layout.viewport()
@@ -6561,7 +6563,7 @@ local function buildGui()
     -- K2 Duels Header: outside the scrolling content.
     local uiHeader = Instance.new("Frame", main)
     uiHeader.Name = "SettingsHeader"
-    uiHeader.Size = UDim2.new(1, 0, 0, 68)
+    uiHeader.Size = UDim2.new(1, 0, 0, 114)
     uiHeader.Position = UDim2.fromOffset(0, 0)
     uiHeader.BackgroundColor3 = UI.theme.background
     uiHeader.BorderSizePixel = 0
@@ -6603,21 +6605,16 @@ local function buildGui()
     headerFallback.Position = headerImage.Position
     headerFallback.BackgroundTransparency = 1
     headerFallback.Text = "K2"
-    headerFallback.TextColor3 = Color3.fromRGB(255, 255, 255)
-    headerFallback.TextStrokeTransparency = 1
+    headerFallback.TextColor3 = UI.theme.light
+    headerFallback.TextStrokeColor3 = UI.theme.accent
+    headerFallback.TextStrokeTransparency = 0.35
     headerFallback.Font = Enum.Font.GothamBlack
     headerFallback.TextScaled = true
-    headerFallback.ZIndex = headerImage.ZIndex + 5
-    headerImage.Image = ""
+    headerFallback.ZIndex = headerImage.ZIndex + 1
     headerImage.Visible = false
     headerFallback.Visible = true
-    headerFallback.Size = UDim2.new(0, 120, 0, 36)
-    headerFallback.Position = UDim2.new(0.5, 0, 0, 8)
-    headerFallback.AnchorPoint = Vector2.new(0.5, 0)
-    headerFallback.TextXAlignment = Enum.TextXAlignment.Center
-    headerFallback.TextYAlignment = Enum.TextYAlignment.Center
 
-    local K2_HEADER_PNG_BASE64 = "" -- stripped legacy art
+    local K2_HEADER_PNG_BASE64 = "" -- removed (K2 text branding)
 
     local function decodeBase64(value)
         local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -6642,9 +6639,9 @@ local function buildGui()
         end)
     end
     task.spawn(function()
-        headerImage.Image = ""
         headerImage.Visible = false
         headerFallback.Visible = true
+        -- K2 text branding only (no embedded legacy image)
     end)
     -- The supplied logo PNG is tightly trimmed, so Fit preserves its artwork
     -- proportions while keeping all of the violet effects in the header.
@@ -6766,12 +6763,12 @@ local function buildGui()
     end
 
     local closeBtn = Instance.new("TextButton", uiHeader)
-    closeBtn.Size = UDim2.new(0, 26, 0, 26)
-    closeBtn.Position = UDim2.new(1, -34, 0, 10)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+    closeBtn.Size = UDim2.new(0, 28, 0, 28)
+    closeBtn.Position = UDim2.new(1, -38, 0, 8)
+    closeBtn.BackgroundColor3 = UI.theme.button
     closeBtn.BorderSizePixel = 0
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+    closeBtn.Text = "X"
+    closeBtn.TextColor3 = UI.theme.muted
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextSize = 12
     closeBtn.ZIndex = 26
@@ -6795,8 +6792,8 @@ local function buildGui()
 
     local sf = Instance.new("ScrollingFrame", main)
     sf.Name = "SettingsContent"
-    sf.Size = UDim2.new(1, 0, 1, -108)
-    sf.Position = UDim2.new(0, 0, 0, 104)
+    sf.Size = UDim2.new(1, 0, 1, -122)
+    sf.Position = UDim2.new(0, 0, 0, 120)
     sf.BackgroundTransparency = 1
     sf.BorderSizePixel = 0
     sf.ClipsDescendants = true
@@ -7089,19 +7086,19 @@ local function buildGui()
         button.BorderSizePixel = 0
         button.AutoButtonColor = false
         button.Text = btnTxt or "RESET"
-        button.TextColor3 = (UI and UI.theme and UI.theme.light) or Color3.fromRGB(245, 245, 250)
+        button.TextColor3 = (UI and UI.theme and UI.theme.light) or Color3.fromRGB(235, 238, 245)
         button.Font = Enum.Font.GothamBlack
         button.TextSize = 10
         button.ZIndex = 5
         Instance.new("UICorner", button).CornerRadius = UDim.new(0, 5)
         local stroke = Instance.new("UIStroke", button)
-        stroke.Color = (UI and UI.theme and UI.theme.border) or Color3.fromRGB(70, 70, 82)
+        stroke.Color = (UI and UI.theme and UI.theme.border) or Color3.fromRGB(140, 148, 165)
         stroke.Thickness = 1
         button.Activated:Connect(function()
-            local acc = (UI and UI.theme and UI.theme.accent) or Color3.fromRGB(220, 220, 230)
+            local acc = (UI and UI.theme and UI.theme.accent) or Color3.fromRGB(200, 208, 220)
             local txtc = (UI and UI.theme and UI.theme.text) or Color3.fromRGB(250, 248, 255)
             local btnc = (UI and UI.theme and UI.theme.button) or Color3.fromRGB(28, 20, 44)
-            local lgt = (UI and UI.theme and UI.theme.light) or Color3.fromRGB(245, 245, 250)
+            local lgt = (UI and UI.theme and UI.theme.light) or Color3.fromRGB(235, 238, 245)
             UI.animate(button, {BackgroundColor3 = acc, TextColor3 = txtc}, 0.08)
             if callback then callback() end
             task.delay(0.18, function()
@@ -7316,11 +7313,11 @@ local function buildGui()
     -- ==================== VISUAL SECTION ====================
     mkSect("VISUAL")
 
-    -- PRINTED-style ESP / Tracers, recolored to K2 purple.
+    -- PRINTED-style ESP / Tracers, recolored to K2 grey.
     -- These are isolated to player characters and clean up when disabled.
     do
-        local visualPurple = Color3.fromRGB(220, 220, 230)
-        local visualLight = Color3.fromRGB(245, 245, 250)
+        local visualGrey = Color3.fromRGB(200, 208, 220)
+        local visualLight = Color3.fromRGB(235, 238, 245)
         local espEnabled, tracersEnabled = State.espEnabled == true, State.tracersEnabled == true
         local espObjects, tracerLines = {}, {}
         local visualConn
@@ -7344,7 +7341,7 @@ local function buildGui()
             local highlight = Instance.new("Highlight")
             highlight.Name = "K2PrintedESP"
             highlight.Adornee = character
-            highlight.FillColor = visualPurple
+            highlight.FillColor = visualGrey
             highlight.OutlineColor = visualLight
             highlight.FillTransparency = 0.72
             highlight.OutlineTransparency = 0.05
@@ -7381,7 +7378,7 @@ local function buildGui()
             line.Name = "K2PrintedTracer"
             line.AnchorPoint = Vector2.new(0.5, 0.5)
             line.BorderSizePixel = 0
-            line.BackgroundColor3 = visualPurple
+            line.BackgroundColor3 = visualGrey
             line.BackgroundTransparency = 0.08
             line.Visible = false
             line.ZIndex = 80
@@ -8156,14 +8153,13 @@ local function buildGui()
     -- ============================================================
     -- MOBILE BUTTONS
     -- ============================================================
-    -- K2 circular quick buttons (1MB K2 Duels look)
-    local MB_OFF     = Color3.fromRGB(12, 12, 14)
-    local MB_ON_C    = Color3.fromRGB(36, 36, 44)
-    local MB_TEXT    = Color3.fromRGB(255, 255, 255)
-    local MB_TEXT_ON = Color3.fromRGB(255, 255, 255)
-    local MB_EDGE_OFF = Color3.fromRGB(32, 32, 38)
-    local MB_EDGE_ON  = Color3.fromRGB(190, 190, 200)
-    local BTN_W, BTN_H, GAP, CORNER = 72, 72, 8, 36
+    local MB_OFF     = UI.theme.background
+    local MB_ON_C    = UI.theme.accent
+    local MB_TEXT    = UI.theme.text
+    local MB_TEXT_ON = UI.theme.text
+    -- Edge color: always grey (no red edge on activation).
+    local MB_EDGE_OFF = Color3.fromRGB(139, 92, 246)
+    local BTN_W, BTN_H, GAP, CORNER = 68, 68, 4, 14
 
     local _sw = Camera.ViewportSize.X
     local _sh = Camera.ViewportSize.Y
@@ -8236,11 +8232,12 @@ local function buildGui()
         frame.BorderSizePixel = 0
         frame.ZIndex = 100
         frame.Active = true
-        Instance.new("UICorner", frame).CornerRadius = UDim.new(1, 0) -- K2 full circle
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, CORNER)
+        -- Grey edge while idle; it turns red while the feature stays active.
         local frameStroke = Instance.new("UIStroke", frame)
         frameStroke.Color = MB_EDGE_OFF
-        frameStroke.Thickness = 1.2
-        frameStroke.Transparency = 0.2
+        frameStroke.Thickness = 1.6
+        frameStroke.Transparency = 0.03
 
         local tL = Instance.new("TextLabel", frame)
         -- Both words are centered as one compact label (for example TP / BAT),
@@ -8564,12 +8561,12 @@ local function buildGui()
     end
 
     -- ============================================================
-    -- TWO PURPLE SKINS, shared by Normal V1, Normal V2 and instant SEMI.
+    -- TWO GREY SKINS, shared by Normal V1, Normal V2 and instant SEMI.
     -- No floating names, RAD fields, or ON/OFF buttons; skin 2 has its readiness state.
     -- Shape 1: slim rail + percentage. Shape 2: rounded full-width fill.
     -- ============================================================
     do
-        local P = Grab.purple
+        local P = Grab.grey
         local function corner(object, radius)
             Instance.new("UICorner", object).CornerRadius = UDim.new(0, radius)
         end
@@ -8680,11 +8677,11 @@ local function buildGui()
         -- (The progress fill is clipped by its own rail, so nothing spills.)
         two.frame.ClipsDescendants = false
         two.frame.BackgroundColor3 = Color3.fromRGB(12, 11, 24)
-        two.stroke.Color = Color3.fromRGB(40, 40, 48)
+        two.stroke.Color = Color3.fromRGB(139, 92, 246)
         two.stroke.Thickness = 1.5
         two.stroke.Transparency = 0
         -- Racing light: a bright violet comet chases around the card border
-        -- while the rest of the edge stays a dim purple.
+        -- while the rest of the edge stays a dim grey.
         two.outlineGradient = gradient(two.stroke, Color3.fromRGB(58, 22, 112), Color3.fromRGB(58, 22, 112))
         two.outlineGradient.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0.00, Color3.fromRGB(58, 22, 112)),
@@ -8709,7 +8706,7 @@ local function buildGui()
         two.track.ZIndex = 11
         corner(two.track, LINE_R)
         local lineStroke = Instance.new("UIStroke", two.track)
-        lineStroke.Color = Color3.fromRGB(40, 40, 48)
+        lineStroke.Color = Color3.fromRGB(139, 92, 246)
         lineStroke.Thickness = 1
         lineStroke.Transparency = 0.5
         two.fill = Instance.new("Frame", two.track)
@@ -8739,7 +8736,7 @@ local function buildGui()
         two.avatar.ZIndex = 14
         corner(two.avatar, 13)
         local avatarStroke = Instance.new("UIStroke", two.avatar)
-        avatarStroke.Color = Color3.fromRGB(40, 40, 48)
+        avatarStroke.Color = Color3.fromRGB(139, 92, 246)
         avatarStroke.Thickness = 1.5
         avatarStroke.Transparency = 0.15
         task.spawn(function()
@@ -8757,7 +8754,7 @@ local function buildGui()
         two.accent.Name = "Accent"
         two.accent.Size = UDim2.fromOffset(3, 34)
         two.accent.Position = UDim2.fromOffset(4, 12)
-        two.accent.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+        two.accent.BackgroundColor3 = Color3.fromRGB(139, 92, 246)
         two.accent.BorderSizePixel = 0
         two.accent.ZIndex = 13
         corner(two.accent, 2)
@@ -8829,7 +8826,7 @@ local function buildGui()
         statsPlate.ZIndex = 13
         corner(statsPlate, 9)
         local statsStroke = Instance.new("UIStroke", statsPlate)
-        statsStroke.Color = Color3.fromRGB(40, 40, 48)
+        statsStroke.Color = Color3.fromRGB(139, 92, 246)
         statsStroke.Transparency = 0.10
         statsStroke.Thickness = 1
         two.stats = Instance.new("TextLabel", statsPlate)
@@ -8868,7 +8865,7 @@ local function buildGui()
         -- the Auto Grab card itself is scaled further down.
         linkScale.Scale = math.max(Grab.getScale(), 0.9)
         local linkStroke = Instance.new("UIStroke", linkPlate)
-        linkStroke.Color = Color3.fromRGB(40, 40, 48)
+        linkStroke.Color = Color3.fromRGB(139, 92, 246)
         linkStroke.Thickness = 1.2
         linkStroke.Transparency = 0.15
         local linkButton = Instance.new("TextButton", linkPlate)
@@ -8878,7 +8875,7 @@ local function buildGui()
         linkButton.BorderSizePixel = 0
         linkButton.AutoButtonColor = false
         linkButton.Text = GRAB_LINK
-        linkButton.TextColor3 = Color3.fromRGB(245, 245, 250)
+        linkButton.TextColor3 = Color3.fromRGB(235, 238, 245)
         linkButton.Font = Enum.Font.GothamBold
         linkButton.TextSize = 11
         linkButton.TextXAlignment = Enum.TextXAlignment.Center
@@ -8949,7 +8946,7 @@ local function buildGui()
                 UI.text(two.status, statusWord)
                 UI.animate(two.counter, {TextColor3 = bright and Color3.fromRGB(226, 216, 255) or P.text}, 0.16)
                 UI.animate(two.status, {TextColor3 = bright and Color3.fromRGB(226, 216, 255) or Color3.fromRGB(167, 139, 250)}, 0.16)
-                UI.animate(two.accent, {BackgroundColor3 = bright and P.light or Color3.fromRGB(40, 40, 48)}, 0.16)
+                UI.animate(two.accent, {BackgroundColor3 = bright and P.light or Color3.fromRGB(139, 92, 246)}, 0.16)
                 two.outlineGradient.Rotation = (two.outlineGradient.Rotation + dt * 135) % 360
                 two.fillGradient.Offset = Vector2.new(math.sin(os.clock() * 1.8) * 0.15, 0)
                 -- Real render FPS: count frames over a quarter-second window
@@ -8989,12 +8986,12 @@ local function buildGui()
         -- Top Category Bar: Positioned prominently at the top below the header logo
         local categoryBar = Instance.new("Frame", main)
         categoryBar.Name = "StickyCategoryBar"
-        categoryBar.Size = UDim2.new(1, -20, 0, 28)
-        categoryBar.Position = UDim2.new(0, 10, 0, 62)
-        categoryBar.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+        categoryBar.Size = UDim2.new(1, -16, 0, 32)
+        categoryBar.Position = UDim2.new(0, 8, 0, 74)
+        categoryBar.BackgroundColor3 = UI.theme.panel
         categoryBar.BorderSizePixel = 0
         categoryBar.ZIndex = 30
-        Instance.new("UICorner", categoryBar).CornerRadius = UDim.new(1, 0)
+        Instance.new("UICorner", categoryBar).CornerRadius = UDim.new(0, 8)
         local catBarStroke = Instance.new("UIStroke", categoryBar)
         catBarStroke.Color = UI.theme.border
         catBarStroke.Thickness = 1
@@ -9040,17 +9037,16 @@ local function buildGui()
 
             for category, record in pairs(categoryButtons) do
                 local selected = category == target
-                -- Screenshot: selected = soft light pill, unselected = muted text only
                 UI.animate(record.button, {
-                    BackgroundColor3 = selected and Color3.fromRGB(55, 55, 65) or Color3.fromRGB(0, 0, 0),
+                    BackgroundColor3 = selected and UI.theme.deep or Color3.fromRGB(0, 0, 0),
                     BackgroundTransparency = selected and 0 or 1,
-                    TextColor3 = selected and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(140, 140, 155),
+                    TextColor3 = selected and UI.theme.text or UI.theme.muted,
                     TextSize = selected and 11 or 10,
                 }, 0.18)
                 UI.animate(record.stroke, {
-                    Color = selected and Color3.fromRGB(90, 90, 105) or UI.theme.border,
-                    Thickness = selected and 1 or 0,
-                    Transparency = selected and 0.35 or 1,
+                    Color = selected and UI.theme.accent or UI.theme.border,
+                    Thickness = selected and 1.5 or 0,
+                    Transparency = selected and 0 or 1,
                 }, 0.18)
             end
         end
@@ -9287,7 +9283,7 @@ local function loadConfigState()
 end
 
 -- ========================================================================
--- INTRO SCREEN - BLACK SPACE / FLYING STARS / PURPLE "K2 DUELS" + CHARGE LINE
+-- INTRO SCREEN - BLACK SPACE / FLYING STARS / GREY "K2 DUELS" + CHARGE LINE
 -- ========================================================================
 local function playK2Intro()
     if not State.introEnabled then return end
@@ -9302,10 +9298,10 @@ local function playK2Intro()
     protectGuiObject(screenGui)
     screenGui.Parent = parent
 
-    local PURPLE_ACCENT = UI.theme.accent
-    local PURPLE_DEEP   = Color3.fromRGB(40, 40, 48)
-    local PURPLE_LIGHT  = UI.theme.light
-    local PURPLE_FILL   = Color3.fromRGB(200, 200, 210)
+    local GREY_ACCENT = UI.theme.accent
+    local GREY_DEEP   = Color3.fromRGB(50, 54, 64)
+    local GREY_LIGHT  = UI.theme.light
+    local GREY_FILL   = Color3.fromRGB(210, 216, 230)
 
     local rng = Random.new(os.clock() * 9973)
 
@@ -9341,7 +9337,7 @@ local function playK2Intro()
     content.Parent = screenGui
 
     -- --------------------------------------------------------------------
-    -- PURPLE NEBULA GLOW (built from frames, no external assets)
+    -- GREY NEBULA GLOW (built from frames, no external assets)
     -- --------------------------------------------------------------------
     for index = 1, 3 do
         local blob = Instance.new("Frame")
@@ -9350,7 +9346,7 @@ local function playK2Intro()
         blob.Position = UDim2.fromScale(0.16 + index * 0.26, 0.2 + (index % 2) * 0.55)
         blob.Size = UDim2.fromScale(0.64, 0.64)
         blob.Rotation = index * 26
-        blob.BackgroundColor3 = index == 2 and PURPLE_DEEP or PURPLE_ACCENT
+        blob.BackgroundColor3 = index == 2 and GREY_DEEP or GREY_ACCENT
         blob.BackgroundTransparency = 0.9
         blob.BorderSizePixel = 0
         blob.ZIndex = 2
@@ -9366,7 +9362,7 @@ local function playK2Intro()
     end
 
     -- --------------------------------------------------------------------
-    -- FLYING STARFIELD: small white stars with a purple hue
+    -- FLYING STARFIELD: small white stars with a grey hue
     -- --------------------------------------------------------------------
     local starLayer = Instance.new("Frame")
     starLayer.Name = "StarField"
@@ -9387,12 +9383,12 @@ local function playK2Intro()
         star.ZIndex = 3
         Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
 
-        -- Mostly pure white stars, with a purple minority for the purple space.
+        -- Mostly pure white stars, with a grey minority for the grey space.
         local roll = rng:NextNumber()
         if roll > 0.84 then
-            star.BackgroundColor3 = PURPLE_LIGHT
+            star.BackgroundColor3 = GREY_LIGHT
         elseif roll > 0.68 then
-            star.BackgroundColor3 = PURPLE_FILL
+            star.BackgroundColor3 = GREY_FILL
         else
             star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         end
@@ -9423,7 +9419,7 @@ local function playK2Intro()
         local streak = Instance.new("Frame")
         streak.Name = "Streak" .. index
         streak.AnchorPoint = Vector2.new(0.5, 0.5)
-        streak.BackgroundColor3 = PURPLE_LIGHT
+        streak.BackgroundColor3 = GREY_LIGHT
         streak.BackgroundTransparency = 0.3
         streak.BorderSizePixel = 0
         streak.Rotation = 18
@@ -9489,7 +9485,7 @@ local function playK2Intro()
     end)
 
     -- --------------------------------------------------------------------
-    -- TITLE: "K2 Duels" in purple
+    -- TITLE: "K2 Duels" in grey
     -- --------------------------------------------------------------------
     local titleHolder = Instance.new("Frame")
     titleHolder.Name = "TitleHolder"
@@ -9507,11 +9503,11 @@ local function playK2Intro()
     titleGlow.Text = "K2 Duels"
     titleGlow.Font = Enum.Font.GothamBlack
     titleGlow.TextScaled = true
-    titleGlow.TextColor3 = PURPLE_DEEP
+    titleGlow.TextColor3 = GREY_DEEP
     titleGlow.TextTransparency = 1
     titleGlow.ZIndex = 5
     local glowStroke = Instance.new("UIStroke", titleGlow)
-    glowStroke.Color = PURPLE_FILL
+    glowStroke.Color = GREY_FILL
     glowStroke.Thickness = 2.5
     glowStroke.Transparency = 1
     titleGlow.Parent = titleHolder
@@ -9529,14 +9525,14 @@ local function playK2Intro()
     local titleGradient = Instance.new("UIGradient", title)
     titleGradient.Rotation = 90
     titleGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, PURPLE_LIGHT),
-        ColorSequenceKeypoint.new(0.45, PURPLE_FILL),
-        ColorSequenceKeypoint.new(1, PURPLE_ACCENT),
+        ColorSequenceKeypoint.new(0, GREY_LIGHT),
+        ColorSequenceKeypoint.new(0.45, GREY_FILL),
+        ColorSequenceKeypoint.new(1, GREY_ACCENT),
     })
     title.Parent = titleHolder
 
     -- --------------------------------------------------------------------
-    -- CHARGE LINE: keeps filling with purple under the word
+    -- CHARGE LINE: keeps filling with grey under the word
     -- --------------------------------------------------------------------
     local track = Instance.new("Frame")
     track.Name = "ChargeTrack"
@@ -9550,7 +9546,7 @@ local function playK2Intro()
     track.ZIndex = 6
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
     local trackStroke = Instance.new("UIStroke", track)
-    trackStroke.Color = PURPLE_FILL
+    trackStroke.Color = GREY_FILL
     trackStroke.Thickness = 1
     trackStroke.Transparency = 1
     track.Parent = content
@@ -9558,15 +9554,15 @@ local function playK2Intro()
     local fill = Instance.new("Frame")
     fill.Name = "ChargeFill"
     fill.Size = UDim2.fromScale(0, 1)
-    fill.BackgroundColor3 = PURPLE_ACCENT
+    fill.BackgroundColor3 = GREY_ACCENT
     fill.BorderSizePixel = 0
     fill.ZIndex = 7
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
     local fillGradient = Instance.new("UIGradient", fill)
     fillGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, PURPLE_DEEP),
-        ColorSequenceKeypoint.new(0.65, PURPLE_ACCENT),
-        ColorSequenceKeypoint.new(1, PURPLE_LIGHT),
+        ColorSequenceKeypoint.new(0, GREY_DEEP),
+        ColorSequenceKeypoint.new(0.65, GREY_ACCENT),
+        ColorSequenceKeypoint.new(1, GREY_LIGHT),
     })
     fill.Parent = track
 
@@ -9575,7 +9571,7 @@ local function playK2Intro()
     fillHead.AnchorPoint = Vector2.new(0.5, 0.5)
     fillHead.Position = UDim2.fromScale(0, 0.5)
     fillHead.Size = UDim2.new(0, 10, 0, 10)
-    fillHead.BackgroundColor3 = PURPLE_LIGHT
+    fillHead.BackgroundColor3 = GREY_LIGHT
     fillHead.BackgroundTransparency = 1
     fillHead.BorderSizePixel = 0
     fillHead.ZIndex = 8
@@ -9622,7 +9618,7 @@ local function playK2Intro()
 
         if finished or not screenGui.Parent then return end
 
-        -- Space fades in, then the word rises into place with a purple glow.
+        -- Space fades in, then the word rises into place with a grey glow.
         tween(content, 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {GroupTransparency = 0})
         tween(titleGlow, 0.95, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, {TextTransparency = 0.55})
         tween(glowStroke, 0.95, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, {Transparency = 0.5})
@@ -9632,7 +9628,7 @@ local function playK2Intro()
             Position = UDim2.fromScale(0.5, 0.45),
         })
 
-        -- Breathing purple glow while the intro is on screen.
+        -- Breathing grey glow while the intro is on screen.
         task.spawn(function()
             local dim = false
             while not finished and screenGui.Parent do
@@ -9647,7 +9643,7 @@ local function playK2Intro()
         task.wait(0.45)
         if finished then return end
 
-        -- The charge line appears and keeps filling with purple.
+        -- The charge line appears and keeps filling with grey.
         tween(track, 0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {BackgroundTransparency = 0})
         tween(trackStroke, 0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {Transparency = 0.35})
         tween(fillHead, 0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {BackgroundTransparency = 0})
@@ -9737,7 +9733,7 @@ else
     if not okState then
         k2ShowBootError("loadConfigState", errState)
     elseif okKeys then
-        print("[K2 Duels] Interface loaded successfully (purple auto grab).")
+        print("[K2 Duels] Interface loaded successfully (grey auto grab).")
     else
         warn("[K2 Duels] Interface loaded, but configuration could not be fully restored. See K2BootError.")
     end
