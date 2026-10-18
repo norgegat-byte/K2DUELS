@@ -1,10 +1,9 @@
 --[[
     K2 Duels
-    Branding: discord.gg/k2scripts
-    Functions: full Duels feature set (auto grab, combat, paths, anti die, etc.)
-    UI: grey glass K2 theme — no legacy artwork / purple branding
+    FUNCTIONS = original M10RU Duels (all logic kept)
+    GUI = K2 dark panel + circular quick buttons (1MB K2 look)
+    Branding: K2 / discord.gg/k2scripts
 ]]
-
 repeat task.wait() until game:IsLoaded()
 
 -- ========================================================================
@@ -276,22 +275,22 @@ local function getCharData()
 end
 
 -- ========================================================================
--- SHARED GREY THEME + INTERRUPTIBLE UI MOTION (visuals only, never physics)
+-- SHARED PURPLE THEME + INTERRUPTIBLE UI MOTION (visuals only, never physics)
 -- ========================================================================
 
 local DEFAULT_THEME = {
-    background = Color3.fromRGB(12, 13, 16),
-    panel = Color3.fromRGB(18, 19, 24),
-    button = Color3.fromRGB(28, 30, 36),
-    track = Color3.fromRGB(36, 38, 46),
-    border = Color3.fromRGB(140, 148, 165),
-    deep = Color3.fromRGB(90, 96, 112),
-    accent = Color3.fromRGB(200, 208, 220),
-    light = Color3.fromRGB(235, 238, 245),
-    text = Color3.fromRGB(248, 250, 255),
-    muted = Color3.fromRGB(160, 168, 184),
-    dim = Color3.fromRGB(110, 118, 132),
-    hover = Color3.fromRGB(42, 46, 56),
+    background = Color3.fromRGB(14, 14, 18),
+    panel = Color3.fromRGB(22, 22, 28),
+    button = Color3.fromRGB(32, 32, 40),
+    track = Color3.fromRGB(40, 40, 50),
+    border = Color3.fromRGB(70, 70, 82),
+    deep = Color3.fromRGB(55, 55, 65),
+    accent = Color3.fromRGB(220, 220, 230),
+    light = Color3.fromRGB(245, 245, 250),
+    text = Color3.fromRGB(255, 255, 255),
+    muted = Color3.fromRGB(160, 160, 175),
+    dim = Color3.fromRGB(110, 110, 125),
+    hover = Color3.fromRGB(45, 45, 55),
 }
 
 local UI = {
@@ -300,20 +299,19 @@ local UI = {
     visibility = setmetatable({}, {__mode = "k"}),
     rows = setmetatable({}, {__mode = "k"}),
     theme = setmetatable({
-        -- K2 grey glass palette
-        background = Color3.fromRGB(12, 13, 16),
-        panel = Color3.fromRGB(18, 19, 24),
-        button = Color3.fromRGB(28, 30, 36),
-        track = Color3.fromRGB(36, 38, 46),
-        border = Color3.fromRGB(140, 148, 165),
-        deep = Color3.fromRGB(90, 96, 112),
-        accent = Color3.fromRGB(200, 208, 220),
-        light = Color3.fromRGB(235, 238, 245),
-        text = Color3.fromRGB(248, 250, 255),
-        muted = Color3.fromRGB(160, 168, 184),
-        dim = Color3.fromRGB(110, 118, 132),
-        hover = Color3.fromRGB(42, 46, 56),
-    }, {__index = function(t, k) return DEFAULT_THEME[k] or Color3.fromRGB(200, 208, 220) end}),
+        background = Color3.fromRGB(14, 14, 18),
+        panel = Color3.fromRGB(22, 22, 28),
+        button = Color3.fromRGB(32, 32, 40),
+        track = Color3.fromRGB(40, 40, 50),
+        border = Color3.fromRGB(70, 70, 82),
+        deep = Color3.fromRGB(55, 55, 65),
+        accent = Color3.fromRGB(220, 220, 230),
+        light = Color3.fromRGB(245, 245, 250),
+        text = Color3.fromRGB(255, 255, 255),
+        muted = Color3.fromRGB(160, 160, 175),
+        dim = Color3.fromRGB(110, 110, 125),
+        hover = Color3.fromRGB(45, 45, 55),
+    }, {__index = function(t, k) return DEFAULT_THEME[k] or Color3.fromRGB(220, 220, 230) end}),
 }
 do
     local runtimeEnvironment = _G
@@ -322,7 +320,7 @@ do
         if ok and type(environment) == "table" then runtimeEnvironment = environment end
     end
     local runtimeKey = "__K2_DUELS_RUNTIME"
-    local previous = runtimeEnvironment[runtimeKey] or runtimeEnvironment["__K2_GREY_SMOOTH_RUNTIME"]
+    local previous = runtimeEnvironment[runtimeKey] or runtimeEnvironment["__K2_GREY_RUNTIME"]
     if type(previous) == "table" and type(previous.destroy) == "function" then pcall(previous.destroy) end
     runtimeEnvironment[runtimeKey] = UI
 
@@ -759,7 +757,7 @@ local Grab = {
     -- the last frame. The fill is capped before the opaque stats plate.
     perf = {elapsed = 0, frames = 0, fps = 0, ping = 0, pingAt = 0},
     visualFillLimit = 0.70,
-    grey = UI.theme,
+    purple = UI.theme,
 }
 local refreshSemiUI = nil
 
@@ -5907,7 +5905,7 @@ do
                 loadingLbl.Position = UDim2.new(0, 0, 0.5, -10)
                 loadingLbl.BackgroundTransparency = 1
                 loadingLbl.Text = "LOADING..."
-                loadingLbl.TextColor3 = Color3.fromRGB(235, 238, 245)
+                loadingLbl.TextColor3 = Color3.fromRGB(245, 245, 250)
                 loadingLbl.Font = Enum.Font.GothamBlack
                 loadingLbl.TextSize = 12
                 loadingLbl.ZIndex = 46
@@ -6423,2150 +6421,647 @@ local function toggleLaggerMode()
 end
 
 -- ========================================================================
--- USER INTERFACE (K2 DUELS GREY GLASS)
+-- USER INTERFACE (K2 DUELS PURPLE / SMOOTH UI)
+-- ========================================================================
+
+-- ========================================================================
+-- MODERN GLASS UI (Vx7-style) — M10RU functions wired, K2 branding
 -- ========================================================================
 local mbContainers = {}
-local mbLocked = false
 
 local function buildGui()
-    local resetMobilePositions = nil
-    local _setMbLockVisual = nil
-    
-    local BG     = UI.theme.background
-    local BG2    = UI.theme.panel
-    local CARD   = UI.theme.panel
-    local HOV    = UI.theme.hover
-    local RED    = UI.theme.accent
-    local REDDIM = UI.theme.deep
-    local STROKE = UI.theme.track
-    local W      = UI.theme.text
-    local DIM    = UI.theme.dim
-    local INP    = UI.theme.panel
-    local OFF    = UI.theme.track
+    local glass = {
+        bg         = Color3.fromRGB(14, 14, 18),
+        panel      = Color3.fromRGB(22, 22, 28),
+        panelHover = Color3.fromRGB(32, 32, 40),
+        side       = Color3.fromRGB(18, 18, 24),
+        top        = Color3.fromRGB(16, 16, 22),
+        border     = Color3.fromRGB(48, 48, 58),
+        accent     = Color3.fromRGB(200, 200, 210),
+        accent2    = Color3.fromRGB(230, 230, 240),
+        text       = Color3.fromRGB(255, 255, 255),
+        muted      = Color3.fromRGB(140, 140, 155),
+        tween      = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    }
+
+    local function mkCorner(parent, radius)
+        local c = Instance.new("UICorner", parent)
+        c.CornerRadius = UDim.new(0, radius or 10)
+        return c
+    end
+    local function mkStroke(parent, color, thickness)
+        local s = Instance.new("UIStroke", parent)
+        s.Color = color or glass.border
+        s.Thickness = thickness or 1
+        s.Transparency = 0.35
+        return s
+    end
+
+    local function mkSwitch(parent, enabled, onToggle)
+        local toggleFrame = Instance.new("Frame", parent)
+        toggleFrame.Name = "ModernToggle"
+        toggleFrame.Size = UDim2.new(0, 42, 0, 22)
+        toggleFrame.AnchorPoint = Vector2.new(1, 0.5)
+        toggleFrame.Position = UDim2.new(1, -12, 0.5, 0)
+        toggleFrame.BackgroundColor3 = enabled and Color3.fromRGB(70, 70, 82) or glass.panelHover
+        toggleFrame.BorderSizePixel = 0
+        mkCorner(toggleFrame, 11)
+        local stroke = mkStroke(toggleFrame, glass.border, 0.8)
+        local knob = Instance.new("Frame", toggleFrame)
+        knob.Size = UDim2.new(0, 16, 0, 16)
+        knob.Position = enabled and UDim2.new(1, -19, 0, 3) or UDim2.new(0, 3, 0, 3)
+        knob.BackgroundColor3 = enabled and Color3.new(1,1,1) or glass.muted
+        knob.BorderSizePixel = 0
+        mkCorner(knob, 8)
+        local btn = Instance.new("TextButton", toggleFrame)
+        btn.Size = UDim2.new(1, 0, 1, 0)
+        btn.BackgroundTransparency = 1
+        btn.Text = ""
+        btn.ZIndex = 5
+        local state = enabled
+        local function setVisual(val)
+            state = val
+            TweenService:Create(toggleFrame, glass.tween, {
+                BackgroundColor3 = state and Color3.fromRGB(70, 70, 82) or glass.panelHover
+            }):Play()
+            TweenService:Create(knob, glass.tween, {
+                Position = state and UDim2.new(1, -19, 0, 3) or UDim2.new(0, 3, 0, 3),
+                BackgroundColor3 = state and Color3.new(1,1,1) or glass.muted
+            }):Play()
+        end
+        btn.MouseButton1Click:Connect(function()
+            state = not state
+            setVisual(state)
+            if onToggle then onToggle(state) end
+        end)
+        return setVisual, toggleFrame
+    end
+
+    local function makeToggleRow(parent, labelText, defaultVal, onToggle)
+        local row = Instance.new("Frame", parent)
+        row.Size = UDim2.new(1, 0, 0, 40)
+        row.BackgroundColor3 = glass.panel
+        row.BackgroundTransparency = 0.15
+        row.BorderSizePixel = 0
+        mkCorner(row, 10)
+        mkStroke(row, glass.border, 0.8)
+        local lbl = Instance.new("TextLabel", row)
+        lbl.Size = UDim2.new(1, -60, 1, 0)
+        lbl.Position = UDim2.new(0, 14, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = labelText
+        lbl.TextColor3 = glass.text
+        lbl.Font = Enum.Font.GothamMedium
+        lbl.TextSize = 12
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        local setVisual = mkSwitch(row, defaultVal == true, onToggle)
+        return setVisual, row
+    end
+
+    local function makeSectionHeader(parent, title)
+        local frame = Instance.new("Frame", parent)
+        frame.Size = UDim2.new(1, 0, 0, 26)
+        frame.BackgroundTransparency = 1
+        local bar = Instance.new("Frame", frame)
+        bar.Size = UDim2.new(0, 3, 0, 14)
+        bar.Position = UDim2.new(0, 4, 0.5, -7)
+        bar.BackgroundColor3 = glass.accent2
+        bar.BorderSizePixel = 0
+        mkCorner(bar, 2)
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.Size = UDim2.new(1, -16, 1, 0)
+        lbl.Position = UDim2.new(0, 14, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = string.upper(title)
+        lbl.TextColor3 = glass.muted
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextSize = 11
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        return frame
+    end
+
+    local function makeNumericRow(parent, labelText, defaultVal, onConfirm)
+        local row = Instance.new("Frame", parent)
+        row.Size = UDim2.new(1, 0, 0, 40)
+        row.BackgroundColor3 = glass.panel
+        row.BackgroundTransparency = 0.15
+        row.BorderSizePixel = 0
+        mkCorner(row, 10)
+        mkStroke(row, glass.border, 0.8)
+        local lbl = Instance.new("TextLabel", row)
+        lbl.Size = UDim2.new(1, -90, 1, 0)
+        lbl.Position = UDim2.new(0, 14, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = labelText
+        lbl.TextColor3 = glass.text
+        lbl.Font = Enum.Font.GothamMedium
+        lbl.TextSize = 12
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        local box = Instance.new("TextBox", row)
+        box.Size = UDim2.new(0, 64, 0, 26)
+        box.AnchorPoint = Vector2.new(1, 0.5)
+        box.Position = UDim2.new(1, -12, 0.5, 0)
+        box.BackgroundColor3 = glass.side
+        box.TextColor3 = glass.accent2
+        box.Font = Enum.Font.GothamBold
+        box.TextSize = 12
+        box.Text = tostring(defaultVal)
+        box.ClearTextOnFocus = false
+        mkCorner(box, 6)
+        mkStroke(box, glass.border, 0.8)
+        box.FocusLost:Connect(function()
+            local num = tonumber(box.Text)
+            if num then
+                onConfirm(num)
+            else
+                box.Text = tostring(defaultVal)
+            end
+        end)
+        return box, row
+    end
 
     local targetParent = getSafeGuiParent()
-
-    -- An inaccessible CoreGui must not stop the PlayerGui fallback.
-    do
-        local function removeOldGui(parent)
-            if not parent then return end
-            pcall(function()
-                for _, name in ipairs({"K2Duels", "fluxduels"}) do
-                    local old = parent:FindFirstChild(name)
-                    if old then old:Destroy() end
-                end
-            end)
-        end
-        removeOldGui(targetParent)
-        removeOldGui(LP:FindFirstChild("PlayerGui"))
-        pcall(function() removeOldGui(game:GetService("CoreGui")) end)
+    for _, name in ipairs({"Vx7ModernV2", "K2Duels", "K2DuelsSettings", "VX7QuickButtons", "M10RUDuels"}) do
+        local old = targetParent:FindFirstChild(name)
+        if old then pcall(function() old:Destroy() end) end
     end
 
     local gui = Instance.new("ScreenGui")
     gui.Name = "K2Duels"
     gui.ResetOnSpawn = false
-    gui.DisplayOrder = 10
+    gui.DisplayOrder = 50
     gui.IgnoreGuiInset = true
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     protectGuiObject(gui)
     gui.Parent = targetParent
     UI.root = gui
-    gui.Destroying:Connect(UI.destroy)
+
+    local function drag(frame, handle, ignoreLock)
+        UI.drag(frame, handle, ignoreLock)
+    end
+
+    -- Open pill (when main hidden)
+    local menuBtn = Instance.new("TextButton", gui)
+    menuBtn.Name = "OpenK2Menu"
+    menuBtn.Size = UDim2.fromOffset(56, 56)
+    menuBtn.Position = UDim2.new(0, 16, 0.35, 0)
+    menuBtn.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
+    menuBtn.Text = "K2"
+    menuBtn.TextColor3 = Color3.new(1,1,1)
+    menuBtn.Font = Enum.Font.GothamBlack
+    menuBtn.TextSize = 16
+    menuBtn.Visible = false
+    menuBtn.ZIndex = 200
+    mkCorner(menuBtn, 28)
+    mkStroke(menuBtn, glass.border, 1.2)
+    menuBtn:SetAttribute("K2AlwaysDraggable", true)
+    UI.drag(menuBtn, menuBtn, true)
 
     local main = Instance.new("CanvasGroup", gui)
     main.Name = "K2DuelsSettings"
-    main.Size = UDim2.new(0, 310, 0, 520)
+    main.Size = UDim2.new(0, 320, 0, 500)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
-    main.BackgroundColor3 = BG
+    main.BackgroundColor3 = glass.bg
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 18)
-    local mainStroke = Instance.new("UIStroke", main)
-    mainStroke.Color = Color3.fromRGB(200, 208, 220)
-    mainStroke.Thickness = 1.6
-    mainStroke.Transparency = 0.15
+    main.GroupTransparency = 0
+    mkCorner(main, 16)
+    mkStroke(main, glass.border, 1.2)
 
-    -- ==================== WINDOW LAYOUT / NUMERIC SCALE ====================
-    -- Scale keeps the existing window-size behavior, now in smooth 10% steps.
-    local Layout = {mainFactor = 1, mobileFactor = 1, controls = {}}
-    do
-        local function finite(value) return type(value) == "number" and value == value and math.abs(value) < math.huge end
-        function Layout.normalize(value, minimum, maximum)
-            value = finite(value) and value or 1
-            return math.clamp(math.floor(value * 10 + 0.5) / 10, minimum, maximum)
-        end
-        local function readScale(path, legacy, presets, minimum, maximum)
-            local value = tonumber(safeReadFile(path))
-            if not finite(value) then value = presets[tonumber(safeReadFile(legacy)) or 2] or 1 end
-            return Layout.normalize(value, minimum, maximum)
-        end
-        Layout.mainFactor = readScale("k2UIScaleFactor.txt", "k2UIScale.txt", {0.8, 1, 1.2, 1.5}, 0.8, 1.5)
-        Layout.mobileFactor = readScale("k2MobScaleFactor.txt", "k2MobScale.txt", {0.7, 1, 1.3, 1.6}, 0.7, 1.6)
-        function Layout.viewport()
-            local camera = workspace.CurrentCamera or Camera
-            local size = camera and camera.ViewportSize
-            if size and size.X > 0 and size.Y > 0 then return size end
-            return Vector2.new(1280, 720)
-        end
-        function Layout.mainSize(factor)
-            local view = Layout.viewport()
-            return UDim2.fromOffset(math.min(math.floor(310 * factor + 0.5), math.max(100, view.X - 24)),
-                math.min(math.floor(520 * factor + 0.5), math.max(140, view.Y - 24)))
-        end
-        function Layout.clampMain(position, size)
-            local view = Layout.viewport()
-            local width, height = size.X.Offset, size.Y.Offset
-            local x = position.X.Scale * view.X + position.X.Offset
-            local y = position.Y.Scale * view.Y + position.Y.Offset
-            local marginX = 14
-            local marginY = 14
-            local halfW = width / 2
-            local halfH = height / 2
-            x = math.clamp(x, marginX + halfW, math.max(marginX + halfW, view.X - marginX - halfW))
-            y = math.clamp(y, marginY + halfH, math.max(marginY + halfH, view.Y - marginY - halfH))
-            return UDim2.fromOffset(x, y)
-        end
-        function Layout.refresh()
-            for key, control in pairs(Layout.controls) do
-                local value = key == "main" and Layout.mainFactor or Layout.mobileFactor
-                local minimum, maximum = key == "main" and 0.8 or 0.7, key == "main" and 1.5 or 1.6
-                UI.text(control.value, tostring(math.floor(value * 100 + 0.5)) .. "%")
-                UI.animate(control.minus, {TextTransparency = value <= minimum and 0.55 or 0})
-                UI.animate(control.plus, {TextTransparency = value >= maximum and 0.55 or 0})
-            end
-        end
-        function Layout.applyMain(value, save)
-            Layout.mainFactor = Layout.normalize(value, 0.8, 1.5)
-            local size = Layout.mainSize(Layout.mainFactor)
-            UI.animate(main, {Size = size, Position = Layout.clampMain(UI.goal(main, "Position"), size)}, 0.28)
-            if save then safeWriteFile("k2UIScaleFactor.txt", tostring(Layout.mainFactor)) end
-            Layout.refresh()
-        end
-        -- Keep the fixed title/close button on-screen while dragging or resizing.
-        local previousFilter = UI.constrainDrag
-        UI.constrainDrag = function(frame, position)
-            if frame == main then return Layout.clampMain(position, UI.goal(main, "Size")) end
-            return previousFilter and previousFilter(frame, position) or position
-        end
-        local camera = workspace.CurrentCamera or Camera
-        if camera and type(camera.GetPropertyChangedSignal) == "function" then
-            local connection = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-                if not UI.alive then return end
-                Layout.applyMain(Layout.mainFactor, false)
-                if Layout.applyMobile then Layout.applyMobile(Layout.mobileFactor, false) end
-            end)
-            UI.addCleanup(function() connection:Disconnect() end)
-        end
-        Layout.applyMain(Layout.mainFactor, false)
-    end
+    local topBar = Instance.new("Frame", main)
+    topBar.Size = UDim2.new(1, 0, 0, 52)
+    topBar.BackgroundColor3 = glass.top
+    topBar.BorderSizePixel = 0
+    local title = Instance.new("TextLabel", topBar)
+    title.Size = UDim2.new(1, -50, 1, 0)
+    title.Position = UDim2.new(0, 16, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "K2"
+    title.TextColor3 = glass.text
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 28
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextYAlignment = Enum.TextYAlignment.Center
 
-    -- K2 Duels Header: outside the scrolling content.
-    local uiHeader = Instance.new("Frame", main)
-    uiHeader.Name = "SettingsHeader"
-    uiHeader.Size = UDim2.new(1, 0, 0, 114)
-    uiHeader.Position = UDim2.fromOffset(0, 0)
-    uiHeader.BackgroundColor3 = UI.theme.background
-    uiHeader.BorderSizePixel = 0
-    uiHeader.ZIndex = 20
-    uiHeader.ClipsDescendants = true
-    Instance.new("UICorner", uiHeader).CornerRadius = UDim.new(0, 18)
-    local headerPatch = Instance.new("Frame", uiHeader)
-    headerPatch.Size = UDim2.new(1, 0, 0, 18)
-    headerPatch.Position = UDim2.new(0, 0, 1, -18)
-    headerPatch.BackgroundColor3 = UI.theme.background
-    headerPatch.BorderSizePixel = 0
-    headerPatch.ZIndex = 20
-    local headerLine = Instance.new("Frame", uiHeader)
-    headerLine.Size = UDim2.new(1, -20, 0, 1)
-    headerLine.Position = UDim2.new(0, 10, 1, -1)
-    headerLine.BackgroundColor3 = UI.theme.border
-    headerLine.BorderSizePixel = 0
-    headerLine.ZIndex = 21
-
-    -- Header artwork: Prominently centered in header
-    local headerImage = Instance.new("ImageLabel", uiHeader)
-    headerImage.Name = "HeaderAsset"
-    headerImage.AnchorPoint = Vector2.new(0.5, 0)
-    headerImage.Size = UDim2.new(0, 190, 0, 58)
-    headerImage.Position = UDim2.new(0.5, 0, 0, 6)
-    headerImage.BackgroundTransparency = 1
-    headerImage.BorderSizePixel = 0
-    headerImage.ZIndex = 22
-    local headerAssetId = "106675514881814"
-    local headerTextureId = "83382076665161"
-    headerImage:SetAttribute("K2AssetId", headerAssetId)
-    headerImage:SetAttribute("K2TextureId", headerTextureId)
-    headerImage.Visible = false
-
-    local headerFallback = Instance.new("TextLabel", uiHeader)
-    headerFallback.Name = "HeaderTextFallback"
-    headerFallback.AnchorPoint = Vector2.new(0.5, 0)
-    headerFallback.Size = headerImage.Size
-    headerFallback.Position = headerImage.Position
-    headerFallback.BackgroundTransparency = 1
-    headerFallback.Text = "K2"
-    headerFallback.TextColor3 = UI.theme.light
-    headerFallback.TextStrokeColor3 = UI.theme.accent
-    headerFallback.TextStrokeTransparency = 0.35
-    headerFallback.Font = Enum.Font.GothamBlack
-    headerFallback.TextScaled = true
-    headerFallback.ZIndex = headerImage.ZIndex + 1
-    headerImage.Visible = false
-    headerFallback.Visible = true
-
-    local K2_HEADER_PNG_BASE64 = "" -- removed (K2 text branding)
-
-    local function decodeBase64(value)
-        local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-        value = tostring(value or ""):gsub("[^" .. alphabet .. "=]", "")
-        local bits = value:gsub(".", function(char)
-            if char == "=" then return "" end
-            local index = alphabet:find(char, 1, true)
-            if not index then return "" end
-            local number = index - 1
-            local output = ""
-            for power = 6, 1, -1 do
-                output = output .. (((number % (2 ^ power)) - (number % (2 ^ (power - 1))) > 0) and "1" or "0")
-            end
-            return output
-        end)
-        return bits:gsub("%d%d%d%d%d%d%d%d", function(byte)
-            local number = 0
-            for index = 1, 8 do
-                if byte:sub(index, index) == "1" then number += 2 ^ (8 - index) end
-            end
-            return string.char(number)
-        end)
-    end
-    task.spawn(function()
-        headerImage.Visible = false
-        headerFallback.Visible = true
-        -- K2 text branding only (no embedded legacy image)
-    end)
-    -- The supplied logo PNG is tightly trimmed, so Fit preserves its artwork
-    -- proportions while keeping all of the violet effects in the header.
-    headerImage.ScaleType = Enum.ScaleType.Fit
-    headerImage.ImageTransparency = 0
-
-    -- Dedicated header handle sits above the scrolling settings content.
-    local function drag(frame, handle, ignoreLock) UI.drag(frame, handle, ignoreLock) end
-    local settingsDragHandle = Instance.new("Frame", uiHeader)
-    settingsDragHandle.Name = "SettingsDragHandle"
-    settingsDragHandle.BackgroundTransparency = 1
-    settingsDragHandle.BorderSizePixel = 0
-    settingsDragHandle.Position = UDim2.fromOffset(10, 0)
-    settingsDragHandle.Size = UDim2.new(1, -65, 0, 68)
-    settingsDragHandle.ZIndex = 24
-    drag(main, settingsDragHandle)
-
-    local menuBtn = Instance.new("TextButton", gui)
-    menuBtn.Name = "OpenK2Menu"
-    menuBtn.Size = UDim2.fromOffset(124, 44)
-    menuBtn.AnchorPoint = Vector2.new(0, 0)
-    menuBtn.Position = UDim2.new(0.067, 0, 0.135, 0) -- fixed top-left, matching the screenshot
-    menuBtn.BackgroundColor3 = UI.theme.panel
-    menuBtn.BorderSizePixel = 0
-    menuBtn.Text = ""
-    menuBtn.ZIndex = 21
-    -- The hub logo artwork fills the whole open button (no text caption).
-    local menuLogo = Instance.new("ImageLabel", menuBtn)
-    menuLogo.Name = "MenuLogo"
-    menuLogo.AnchorPoint = Vector2.new(0.5, 0.5)
-    menuLogo.Position = UDim2.fromScale(0.5, 0.5)
-    menuLogo.Size = UDim2.new(1, -6, 1, -4)
-    menuLogo.BackgroundTransparency = 1
-    menuLogo.ScaleType = Enum.ScaleType.Fit
-    menuLogo.ZIndex = 22
-    task.spawn(function()
-        local attempts = 0
-        while attempts < 8 do
-            local assetPath = safeGetAsset("k2_header_embedded.png")
-            if assetPath ~= "" then
-                if menuLogo.Parent then menuLogo.Image = assetPath end
-                return
-            end
-            attempts += 1
-            task.wait(0.6)
-        end
-    end)
-    menuBtn:SetAttribute("K2AlwaysDraggable", true)
-    menuBtn.Visible = false
-    Instance.new("UICorner", menuBtn).CornerRadius = UDim.new(0, 10)
-    local menuStroke = Instance.new("UIStroke", menuBtn)
-    menuStroke.Color = UI.theme.border
-    menuStroke.Thickness = 1
-
-    menuBtn.MouseEnter:Connect(function()
-        TweenService:Create(menuBtn, TweenInfo.new(0.1), {BackgroundColor3 = UI.theme.button}):Play()
-    end)
-    menuBtn.MouseLeave:Connect(function()
-        TweenService:Create(menuBtn, TweenInfo.new(0.1), {BackgroundColor3 = UI.theme.panel}):Play()
-    end)
-
-    local guiAnimating = false
-    local lastMainPosition = UDim2.new(0, 14, 0.5, 0)
-
-    local function showGui()
-        if guiAnimating then return end
-        guiAnimating = true
-        UI.show(menuBtn, false)
-
-        local targetPos = lastMainPosition or UDim2.new(0, 14, 0.5, 0)
-        -- Start position: off-screen to the left (-360 pixels)
-        local startPos = UDim2.new(0, -360, targetPos.Y.Scale, targetPos.Y.Offset)
-        
-        if UI.visibility[main] then UI.visibility[main].wanted = true end
-        main.Position = startPos
-        main.GroupTransparency = 1
-        main.Visible = true
-
-        -- Ultra-smooth slide in from the left side
-        local tweenPos = TweenService:Create(main, TweenInfo.new(0.36, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Position = targetPos
-        })
-        local tweenFade = TweenService:Create(main, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            GroupTransparency = 0
-        })
-
-        tweenPos:Play()
-        tweenFade:Play()
-
-        tweenPos.Completed:Connect(function()
-            guiAnimating = false
-        end)
-    end
-
-    local function hideGui()
-        if guiAnimating or not main.Visible then return end
-        guiAnimating = true
-        lastMainPosition = main.Position
-
-        -- Ultra-smooth slide out to the left side
-        local exitPos = UDim2.new(0, -360, main.Position.Y.Scale, main.Position.Y.Offset)
-        local tweenPos = TweenService:Create(main, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-            Position = exitPos
-        })
-        local tweenFade = TweenService:Create(main, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            GroupTransparency = 1
-        })
-
-        tweenPos:Play()
-        tweenFade:Play()
-
-        if UI.visibility[main] then UI.visibility[main].wanted = false end
-        tweenPos.Completed:Connect(function()
-            main.Visible = false
-            main.Position = lastMainPosition
-            guiAnimating = false
-            UI.show(menuBtn, true)
-        end)
-    end
-
-    local closeBtn = Instance.new("TextButton", uiHeader)
-    closeBtn.Size = UDim2.new(0, 28, 0, 28)
-    closeBtn.Position = UDim2.new(1, -38, 0, 8)
-    closeBtn.BackgroundColor3 = UI.theme.button
-    closeBtn.BorderSizePixel = 0
-    closeBtn.Text = "X"
-    closeBtn.TextColor3 = UI.theme.muted
+    local closeBtn = Instance.new("TextButton", topBar)
+    closeBtn.Size = UDim2.fromOffset(28, 28)
+    closeBtn.Position = UDim2.new(1, -38, 0.5, -14)
+    closeBtn.BackgroundColor3 = glass.panelHover
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = glass.muted
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextSize = 12
-    closeBtn.ZIndex = 26
-    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
-    local closeStroke = Instance.new("UIStroke", closeBtn)
-    closeStroke.Color = UI.theme.border
-    closeStroke.Thickness = 1
-    closeBtn.MouseEnter:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.15), {BackgroundColor3 = UI.theme.deep, TextColor3 = UI.theme.text}):Play()
-    end)
-    closeBtn.MouseLeave:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.15), {BackgroundColor3 = UI.theme.button, TextColor3 = UI.theme.muted}):Play()
-    end)
+    mkCorner(closeBtn, 14)
+
+    local function showGui()
+        main.Visible = true
+        menuBtn.Visible = false
+        main.GroupTransparency = 0
+    end
+    local function hideGui()
+        main.Visible = false
+        menuBtn.Visible = true
+    end
     closeBtn.MouseButton1Click:Connect(hideGui)
     menuBtn.MouseButton1Click:Connect(showGui)
-    -- The open button remains movable even while the main panel is hidden.
-    UI.drag(menuBtn, menuBtn, true)
+    UI.drag(main, topBar, true)
 
-    -- The player identity badge (avatar + name) was removed: the character
-    -- avatar now lives on the Auto Grab card, centred above the progress line.
+    -- Tab strip under header (SPEE COMB VISU MISC BINDS style)
+    local tabBar = Instance.new("Frame", main)
+    tabBar.Size = UDim2.new(1, -20, 0, 30)
+    tabBar.Position = UDim2.new(0, 10, 0, 56)
+    tabBar.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    tabBar.BorderSizePixel = 0
+    mkCorner(tabBar, 15)
 
-    local sf = Instance.new("ScrollingFrame", main)
-    sf.Name = "SettingsContent"
-    sf.Size = UDim2.new(1, 0, 1, -122)
-    sf.Position = UDim2.new(0, 0, 0, 120)
-    sf.BackgroundTransparency = 1
-    sf.BorderSizePixel = 0
-    sf.ClipsDescendants = true
-    sf.ScrollBarThickness = 0
-    sf.ScrollBarImageTransparency = 1
-    sf.CanvasSize = UDim2.new(0, 0, 0, 0)
-    sf.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-    local ll = Instance.new("UIListLayout", sf)
-    ll.SortOrder = Enum.SortOrder.LayoutOrder
-    ll.Padding = UDim.new(0, 3)
-
-    local pad = Instance.new("UIPadding", sf)
-    pad.PaddingLeft = UDim.new(0, 10)
-    pad.PaddingRight = UDim.new(0, 10)
-    pad.PaddingTop = UDim.new(0, 0)
-    pad.PaddingBottom = UDim.new(0, 14)
-
-    local lo = 0
-    local sectionRefs = {}
-    local function LO() lo = lo + 1; return lo end
-
-    local function mkSect(txt)
-        local f = Instance.new("Frame", sf)
-        sectionRefs[txt:upper()] = f
-        f:SetAttribute("K2Section", true)
-        f.Size = UDim2.new(1, 0, 0, 32)
-        f.BackgroundColor3 = UI.theme.panel
-        f.BorderSizePixel = 0
-        f.LayoutOrder = LO()
-        Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-        local stroke = Instance.new("UIStroke", f)
-        stroke.Color = UI.theme.border
-        stroke.Thickness = 1
-        stroke.Transparency = 0.4
-        local accent = Instance.new("Frame", f)
-        accent.Size = UDim2.new(0, 3, 0, 16)
-        accent.Position = UDim2.new(0, 8, 0.5, -8)
-        accent.BackgroundColor3 = UI.theme.accent
-        accent.BorderSizePixel = 0
-        Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
-        local l = Instance.new("TextLabel", f)
-        l.Size = UDim2.new(1, -24, 1, 0)
-        l.Position = UDim2.new(0, 18, 0, 0)
-        l.BackgroundTransparency = 1
-        l.Text = txt:upper()
-        l.TextColor3 = UI.theme.light
-        l.Font = Enum.Font.GothamBold
-        l.TextSize = 11
-        l.TextXAlignment = Enum.TextXAlignment.Left
-    end
-
-    local function mkRow(h)
-        local f = Instance.new("Frame", sf)
-        f.Size = UDim2.new(1, 0, 0, h or 38)
-        f.BackgroundColor3 = CARD
-        f.BorderSizePixel = 0
-        f.LayoutOrder = LO()
-        Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-        local st = Instance.new("UIStroke", f)
-        st.Color = UI.theme.border
-        st.Thickness = 1
-        st.Transparency = 0.6
-        f.MouseEnter:Connect(function()
-            TweenService:Create(f, TweenInfo.new(0.12), {BackgroundColor3 = HOV}):Play()
-            TweenService:Create(st, TweenInfo.new(0.12), {Transparency = 0.2}):Play()
-        end)
-        f.MouseLeave:Connect(function()
-            TweenService:Create(f, TweenInfo.new(0.12), {BackgroundColor3 = CARD}):Play()
-            TweenService:Create(st, TweenInfo.new(0.12), {Transparency = 0.6}):Play()
-        end)
-        return f
-    end
-
-    local function mkLabel(row, txt)
-        local l = Instance.new("TextLabel", row)
-        l.Size = UDim2.new(0.58, 0, 1, 0)
-        l.Position = UDim2.new(0, 12, 0, 0)
-        l.BackgroundTransparency = 1
-        l.Text = txt
-        l.TextColor3 = W
-        l.Font = Enum.Font.GothamBold
-        l.TextSize = 11
-        l.TextXAlignment = Enum.TextXAlignment.Left
-        l.TextTruncate = Enum.TextTruncate.AtEnd
-        return l
-    end
-
-    local function mkPill(row, offset)
-        local pill = Instance.new("Frame", row)
-        pill.Size = UDim2.new(0, 38, 0, 20)
-        pill.Position = UDim2.new(1, -(offset or 44), 0.5, -10)
-        pill.BackgroundColor3 = OFF
-        pill.BorderSizePixel = 0
-        pill.ZIndex = 3
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
-        local pillStroke = Instance.new("UIStroke", pill)
-        pillStroke.Color = UI.theme.border
-        pillStroke.Thickness = 1
-        pillStroke.Transparency = 0.4
-        local dot = Instance.new("Frame", pill)
-        dot.Size = UDim2.new(0, 14, 0, 14)
-        dot.Position = UDim2.new(0, 3, 0.5, -7)
-        dot.BackgroundColor3 = DIM
-        dot.BorderSizePixel = 0
-        dot.ZIndex = 4
-        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-        return pill, dot
-    end
-
-    local function animPill(pill, dot, on)
-        TweenService:Create(pill, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = on and UI.theme.deep or OFF
-        }):Play()
-        local pStroke = pill:FindFirstChildOfClass("UIStroke")
-        if pStroke then
-            TweenService:Create(pStroke, TweenInfo.new(0.2), {
-                Color = on and UI.theme.accent or UI.theme.border,
-                Transparency = on and 0.1 or 0.4
-            }):Play()
-        end
-        TweenService:Create(dot, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Position = on and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7),
-            BackgroundColor3 = on and UI.theme.text or DIM
-        }):Play()
-    end
-
-    local function mkToggle(txt, cb)
-        local row = mkRow(32)
-        mkLabel(row, txt)
-        local pill, dot = mkPill(row, 42)
-        local on = false
-        local function sv(s) on = s; animPill(pill, dot, s) end
-        local clk = Instance.new("TextButton", pill)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 5
-        clk.Activated:Connect(function() on = not on; sv(on); cb(on) end)
-        pill.ZIndex = 3
-        dot.ZIndex = 4
-        return sv
-    end
-
-    local function mkBox(parent, default, w, xOff, cb)
-        local tb = Instance.new("TextBox", parent)
-        tb.Size = UDim2.new(0, w or 50, 0, 22)
-        tb.Position = UDim2.new(1, -(xOff or 56), 0.5, -11)
-        tb.BackgroundColor3 = INP
-        tb.BorderSizePixel = 0
-        tb.Text = tostring(default)
-        tb.TextColor3 = W
-        tb.Font = Enum.Font.GothamBold
-        tb.TextSize = 11
-        tb.ClearTextOnFocus = false
-        tb.ZIndex = 5
-        Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 5)
-        local bs = Instance.new("UIStroke", tb)
-        bs.Color = UI.theme.border
-        bs.Thickness = 1
-        tb.Focused:Connect(function() TweenService:Create(bs, TweenInfo.new(0.12), {Color = REDDIM}):Play() end)
-        tb.FocusLost:Connect(function()
-            TweenService:Create(bs, TweenInfo.new(0.12), {Color = UI.theme.border}):Play()
-            if cb then
-                local n = tonumber(tb.Text)
-                if n then cb(n) else tb.Text = tostring(default) end
-            end
-        end)
-        return tb
-    end
-
-    local GAMEPAD_KEYS = {
-        [Enum.KeyCode.ButtonA] = true, [Enum.KeyCode.ButtonB] = true,
-        [Enum.KeyCode.ButtonX] = true, [Enum.KeyCode.ButtonY] = true,
-        [Enum.KeyCode.ButtonL1] = true, [Enum.KeyCode.ButtonR1] = true,
-        [Enum.KeyCode.ButtonL2] = true, [Enum.KeyCode.ButtonR2] = true,
-        [Enum.KeyCode.ButtonL3] = true, [Enum.KeyCode.ButtonR3] = true,
-        [Enum.KeyCode.ButtonStart] = true, [Enum.KeyCode.ButtonSelect] = true,
-        [Enum.KeyCode.DPadUp] = true, [Enum.KeyCode.DPadDown] = true,
-        [Enum.KeyCode.DPadLeft] = true, [Enum.KeyCode.DPadRight] = true
+    local tabs = {
+        { id = "Main",    label = "SPEE" },
+        { id = "Combat",  label = "COMB" },
+        { id = "Visuals", label = "VISU" },
+        { id = "Misc",    label = "MISC" },
+        { id = "Config",  label = "BINDS" },
     }
+    local pages = {}
+    local tabButtons = {}
 
-    local function isGamepadInput(inp)
-        return inp and inp.UserInputType and inp.UserInputType.Name:match("^Gamepad") ~= nil
+    local contentArea = Instance.new("Frame", main)
+    contentArea.Size = UDim2.new(1, -16, 1, -100)
+    contentArea.Position = UDim2.new(0, 8, 0, 92)
+    contentArea.BackgroundTransparency = 1
+
+    local function buildPage(id)
+        local sf = Instance.new("ScrollingFrame", contentArea)
+        sf.Name = id .. "Page"
+        sf.Size = UDim2.new(1, 0, 1, 0)
+        sf.BackgroundTransparency = 1
+        sf.BorderSizePixel = 0
+        sf.ScrollBarThickness = 2
+        sf.ScrollBarImageColor3 = glass.accent
+        sf.CanvasSize = UDim2.new(0, 0, 0, 0)
+        sf.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        sf.Visible = false
+        local layout = Instance.new("UIListLayout", sf)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0, 6)
+        local pad = Instance.new("UIPadding", sf)
+        pad.PaddingLeft = UDim.new(0, 2)
+        pad.PaddingRight = UDim.new(0, 2)
+        pad.PaddingTop = UDim.new(0, 4)
+        pad.PaddingBottom = UDim.new(0, 10)
+        pages[id] = sf
+        return sf
     end
+    for _, t in ipairs(tabs) do buildPage(t.id) end
+    pages["Main"].Visible = true
 
-    local function isBindableInput(inp)
-        if not inp or inp.KeyCode == Enum.KeyCode.Unknown then return false end
-        if inp.UserInputType == Enum.UserInputType.Keyboard then return true end
-        return isGamepadInput(inp) and GAMEPAD_KEYS[inp.KeyCode] == true
-    end
-
-    local function kbMatch(entry, kc)
-        return kc and (kc == entry.kb or (entry.gp and kc == entry.gp))
-    end
-
-    local _anyKeyListening = false
-    local function mkKB(parent, kbEntry, cb)
-        local btn = Instance.new("TextButton", parent)
-        btn.Size = UDim2.new(0, 46, 0, 22)
-        btn.Position = UDim2.new(1, -50, 0.5, -11)
-        btn.BackgroundColor3 = INP
-        btn.BorderSizePixel = 0
-        local function getLabel()
-            return (kbEntry.gp and kbEntry.gp.Name) or (kbEntry.kb and kbEntry.kb.Name) or "None"
-        end
-        btn.Text = getLabel()
-        btn.TextColor3 = W
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 9
-        btn.ZIndex = 5
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-
-        local li = false
-        local lc = nil
-        local pv = btn.Text
-        local listenStart = 0
-
-        btn.Activated:Connect(function()
-            if li then
-                li = false
-                _anyKeyListening = false
-                if lc then lc:Disconnect(); lc = nil end
-                btn.Text = pv
-                btn.TextColor3 = W
-                return
+    local tabW = 1 / #tabs
+    for i, t in ipairs(tabs) do
+        local b = Instance.new("TextButton", tabBar)
+        b.Size = UDim2.new(tabW, -4, 1, -6)
+        b.Position = UDim2.new((i - 1) * tabW, 2, 0, 3)
+        b.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+        b.BackgroundTransparency = (i == 1) and 0 or 1
+        b.Text = t.label
+        b.TextColor3 = (i == 1) and glass.text or glass.muted
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 10
+        b.BorderSizePixel = 0
+        mkCorner(b, 10)
+        tabButtons[t.id] = b
+        local tid = t.id
+        b.MouseButton1Click:Connect(function()
+            for id, page in pairs(pages) do page.Visible = (id == tid) end
+            for id, btn in pairs(tabButtons) do
+                local sel = (id == tid)
+                btn.BackgroundTransparency = sel and 0 or 1
+                btn.TextColor3 = sel and glass.text or glass.muted
             end
-            pv = btn.Text
-            li = true
-            _anyKeyListening = true
-            listenStart = tick()
-            btn.Text = "..."
-            btn.TextColor3 = W
-            lc = UserInputService.InputBegan:Connect(function(inp)
-                if not li then return end
-                if inp.KeyCode == Enum.KeyCode.Escape then
-                    li = false
-                    _anyKeyListening = false
-                    if lc then lc:Disconnect(); lc = nil end
-                    btn.Text = pv
-                    btn.TextColor3 = W
-                    return
-                end
-                local isGp = isGamepadInput(inp)
-                if isGp and tick() - listenStart < 0.15 then return end
-                if not isBindableInput(inp) then return end
-                btn.Text = inp.KeyCode.Name
-                pv = inp.KeyCode.Name
-                btn.TextColor3 = W
-                li = false
-                _anyKeyListening = false
-                if lc then lc:Disconnect(); lc = nil end
-                if cb then cb(inp.KeyCode, isGp) end
-            end)
         end)
-        return btn
-    end
-
-    local function mkToggleKB(txt, kbEntry, onToggle, onKB)
-        local row = mkRow(32)
-        mkLabel(row, txt)
-        if kbEntry then
-            mkKB(row, kbEntry, function(k, isGp)
-                if isGp then kbEntry.gp = k; kbEntry.kb = nil
-                else kbEntry.kb = k; kbEntry.gp = nil end
-                if onKB then onKB(k, isGp) end
-            end)
-        end
-        local pill, dot = mkPill(row, kbEntry and 102 or 42)
-        local on = false
-        local function sv(s) on = s; animPill(pill, dot, s) end
-        local clk = Instance.new("TextButton", pill)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 5
-        clk.Activated:Connect(function() on = not on; sv(on); onToggle(on) end)
-        pill.ZIndex = 3
-        dot.ZIndex = 4
-        return sv
-    end
-
-    local function mkAction(txt, callback, btnTxt)
-        local row = mkRow(32)
-        mkLabel(row, txt)
-        local button = Instance.new("TextButton", row)
-        button.Size = UDim2.fromOffset(86, 22)
-        button.Position = UDim2.new(1, -96, 0.5, -11)
-        button.BackgroundColor3 = (UI and UI.theme and UI.theme.button) or Color3.fromRGB(28, 20, 44)
-        button.BorderSizePixel = 0
-        button.AutoButtonColor = false
-        button.Text = btnTxt or "RESET"
-        button.TextColor3 = (UI and UI.theme and UI.theme.light) or Color3.fromRGB(235, 238, 245)
-        button.Font = Enum.Font.GothamBlack
-        button.TextSize = 10
-        button.ZIndex = 5
-        Instance.new("UICorner", button).CornerRadius = UDim.new(0, 5)
-        local stroke = Instance.new("UIStroke", button)
-        stroke.Color = (UI and UI.theme and UI.theme.border) or Color3.fromRGB(140, 148, 165)
-        stroke.Thickness = 1
-        button.Activated:Connect(function()
-            local acc = (UI and UI.theme and UI.theme.accent) or Color3.fromRGB(200, 208, 220)
-            local txtc = (UI and UI.theme and UI.theme.text) or Color3.fromRGB(250, 248, 255)
-            local btnc = (UI and UI.theme and UI.theme.button) or Color3.fromRGB(28, 20, 44)
-            local lgt = (UI and UI.theme and UI.theme.light) or Color3.fromRGB(235, 238, 245)
-            UI.animate(button, {BackgroundColor3 = acc, TextColor3 = txtc}, 0.08)
-            if callback then callback() end
-            task.delay(0.18, function()
-                if button.Parent then UI.animate(button, {BackgroundColor3 = btnc, TextColor3 = lgt}, 0.12) end
-            end)
-        end)
-        return button
     end
 
     local function handleAutoSwitchCarrySpeed(on)
         State.autoCarrySpeedEnabled = on == true
+        if not on then
+            pcall(function()
+                if disableAutoCarrySpeed then disableAutoCarrySpeed() end
+            end)
+        end
+        saveConfig()
+    end
+
+    -- ========== MAIN / SPEED ==========
+    local mainPage = pages["Main"]
+    makeSectionHeader(mainPage, "Speed")
+    makeNumericRow(mainPage, "Normal Speed", State.NS, function(v) State.NS = v; saveConfig() end)
+    makeNumericRow(mainPage, "Carry Speed", State.CS, function(v)
+        State.CS = v
         State.autoCarryLastSpeed = 0
-        State.stealAttrWasActive = false
-        if not on then disableAutoCarrySpeed() end
-        if setAutoSwitchSpeedVisual then setAutoSwitchSpeedVisual(on) end
-        refreshSpeedModeLabel()
+        if Speed and Speed.refreshVisuals then pcall(Speed.refreshVisuals) end
         saveConfig()
-    end
-
-    -- ==================== MOVEMENT SECTION ====================
-    mkSect("SPEED")
-    do
-        local row = mkRow(32); mkLabel(row, "Normal Speed")
-        normalBox = mkBox(row, State.NS, 50, 56, function(v) State.NS = v; saveConfig() end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Carry Speed")
-        carryBox = mkBox(row, State.CS, 50, 56, function(v)
-            State.CS = tonumber(v) or State.CS
-            if State.speedMode then State.autoCarryLastSpeed = 0 end
-            if Speed.refreshVisuals then Speed.refreshVisuals() end
-            saveConfig()
-        end)
-    end
-    do
-        setAutoSwitchSpeedVisual = mkToggle("Auto Switch Carry Speed", handleAutoSwitchCarrySpeed)
-        if State.autoCarrySpeedEnabled then setAutoSwitchSpeedVisual(true) end
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Lagger Speed")
-        mkBox(row, State.LAGGER_SPEED, 50, 56, function(v) State.LAGGER_SPEED = v; saveConfig() end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Lagger Carry Speed")
-        laggerCarryBox = mkBox(row, State.LAGGER_CARRY_SPEED, 50, 56, function(v) State.LAGGER_CARRY_SPEED = v; saveConfig() end)
-    end
-    do
-        Speed.laggerVisual = mkToggleKB("Lagger Mode", KB.LaggerToggle,
-            function(on)
-                if on ~= State.laggerToggled then toggleLaggerMode() end
-                refreshSpeedModeLabel()
-                saveConfig()
-            end,
-            function(k, isGp)
-                if isGp then KB.LaggerToggle.gp = k; KB.LaggerToggle.kb = nil
-                else KB.LaggerToggle.kb = k; KB.LaggerToggle.gp = nil end
-                saveConfig()
-            end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Carry Mode")
-        mkKB(row, KB.SpeedToggle, function(k, isGp)
-            if isGp then KB.SpeedToggle.gp = k; KB.SpeedToggle.kb = nil
-            else KB.SpeedToggle.kb = k; KB.SpeedToggle.gp = nil end
-            saveConfig()
-        end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Auto Play Mode")
-        local modeValue = Instance.new("TextLabel", row)
-        modeValue.Size = UDim2.new(0, 80, 1, 0)
-        modeValue.Position = UDim2.new(1, -130, 0, 0)
-        modeValue.BackgroundTransparency = 1
-        modeValue.Text = State.autoPlayMode
-        modeValue.TextColor3 = UI.theme.accent
-        modeValue.Font = Enum.Font.GothamBlack
-        modeValue.TextSize = 11
-        modeValue.TextXAlignment = Enum.TextXAlignment.Right
-
-        local function refreshAutoPlayMode()
-            modeValue.Text = State.autoPlayMode
+    end)
+    makeToggleRow(mainPage, "Auto Switch Carry Speed", State.autoCarrySpeedEnabled, handleAutoSwitchCarrySpeed)
+    makeSectionHeader(mainPage, "Lagger")
+    makeNumericRow(mainPage, "Lagger Speed", State.LAGGER_SPEED, function(v) State.LAGGER_SPEED = v; saveConfig() end)
+    makeNumericRow(mainPage, "Lagger Carry Speed", State.LAGGER_CARRY_SPEED, function(v) State.LAGGER_CARRY_SPEED = v; saveConfig() end)
+    makeToggleRow(mainPage, "Lagger Mode", State.laggerToggled, function(on)
+        if on ~= State.laggerToggled then toggleLaggerMode() end
+        saveConfig()
+    end)
+    makeSectionHeader(mainPage, "Auto Grab")
+    makeToggleRow(mainPage, "Auto Grab", State.StealV1 and State.StealV1.AutoStealEnabled or State.SemiNormalOpen, function(on)
+        if on then
+            if Grab and Grab.startNormal then Grab.startNormal()
+            elseif Grab and Grab.toggleNormal then Grab.toggleNormal() end
+        else
+            if Grab and Grab.stopAll then Grab.stopAll() end
         end
-
-        local click = Instance.new("TextButton", row)
-        click.Size = UDim2.new(1, 0, 1, 0)
-        click.BackgroundTransparency = 1
-        click.Text = ""
-        click.ZIndex = 2
-        click.Activated:Connect(function()
-            if _anyKeyListening then return end
-
-            if AutoPlay.active then
-                stopAutoPlay()
-            end
-
-            if State.autoPlayMode == "Half" then
-                State.autoPlayMode = "Auto"
-            else
-                State.autoPlayMode = "Half"
-            end
-
-            refreshAutoPlayMode()
-
-            local left = gui:FindFirstChild("MB_AUTO_LEFT", true)
-            local right = gui:FindFirstChild("MB_AUTO_RIGHT", true)
-            if left then UI.show(left, true, true) end
-            if right then UI.show(right, true, true) end
-
-            safeWriteFile("k2AutoPlayMode.txt", State.autoPlayMode)
-            saveConfig()
-        end)
-    end
-
-    -- ==================== COMBAT SECTION ====================
-    mkSect("COMBAT")
-    -- TP BAT ROW: the supplied file places its control in KEYBINDS.
-    -- Picking a mode requires mode code that was not present in this source.
-    setBodyLockVisual = mkToggle("Body Lock", function(on)
-        BodyLock.setEnabled(on)
-        saveConfig()
-    end)
-    -- Wire the pill: without this, silently re-armed Body Lock ran while the
-    -- toggle still looked Off (character staring at a player with pill Off).
-    BodyLock.visual = setBodyLockVisual
-    -- Reflect the restored saved state on the pill itself.
-    if setBodyLockVisual then setBodyLockVisual(State.bodyLockEnabled) end
-    do
-        local row = mkRow(32); mkLabel(row, "Body Lock Radius")
-        bodyLockRangeBox = mkBox(row, State.bodyLockRange, 50, 56, function(value)
-            State.bodyLockRange = math.clamp(math.floor(value), 5, 200)
-            saveConfig()
-        end)
-    end
-    setMedusaVisual = mkToggle("Medusa Counter", function(on)
-        State.medusaCounterEnabled = on
-        if on then setupMedusa(LP.Character) else stopMedusaCounter() end
-        saveConfig()
-    end)
-    setBatCounterVisual = mkToggle("Bat Counter", function(on)
-        State.batCounterEnabled = on
-        if on then startBatCounter() else stopBatCounter() end
-        saveConfig()
-    end)
-    setInfJumpVisual = mkToggle("Infinite Jump", function(on)
-        State.infJumpEnabled = on
-        saveConfig()
-    end)
-    setAutoTPVisual = mkToggle("Auto TP", function(on)
-        State.autoTPEnabled = on
-        if on then startAutoTP() else stopAutoTP() end
-        saveConfig()
-    end)
-    do
-        local row = mkRow(32); mkLabel(row, "Auto TP Height")
-        autoTPHeightBox = mkBox(row, State.autoTPHeight, 50, 56, function(v) State.autoTPHeight = v; saveConfig() end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Jump Mode")
-        local modeVal = Instance.new("TextLabel", row)
-        modeVal.Size = UDim2.new(0, 80, 1, 0)
-        modeVal.Position = UDim2.new(1, -130, 0, 0)
-        modeVal.BackgroundTransparency = 1
-        modeVal.Text = State.infJumpMode:upper()
-        modeVal.TextColor3 = RED
-        modeVal.Font = Enum.Font.GothamBlack
-        modeVal.TextSize = 11
-        modeVal.TextXAlignment = Enum.TextXAlignment.Right
-        setJumpModeVisual = function(m) State.infJumpMode = m; modeVal.Text = m:upper() end
-        local clk = Instance.new("TextButton", row)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 2
-        clk.Activated:Connect(function()
-            if _anyKeyListening then return end
-            if State.infJumpMode == "manual" then
-                State.infJumpMode = "hold"
-            else
-                State.infJumpMode = "manual"
-            end
-            if setJumpModeVisual then setJumpModeVisual(State.infJumpMode) end
-            saveConfig()
-        end)
-    end
-    setAutoBatVisual = mkToggle("Aimbot", function(on)
-        if on then queueAutoBatStart() else disableAutoBat() end
-        saveConfig()
-    end)
-    -- Horizon's Instant Reset is a one-shot action, not an aimbot toggle.
-    mkAction("Insta Reset", function()
-        InstantReset.reset()
-    end)
-    setAutoSwingVisual = mkToggle("Auto Swing", function(on)
-        AutoSwing.setEnabled(on)
-        saveConfig()
-    end)
-    -- Standalone anti die; no donor window or overhead display.
-    AntiDie.visual = mkToggle("anti die", function(on)
-        -- Selecting Anti Die explicitly stops Instant Reset on Die, because
-        -- Anti Die suppresses the death signal the reset monitor requires.
-        if on and State.instantResetOnDieEnabled then DeathReset.setEnabled(false) end
-        AntiDie.setEnabled(on)
-        saveConfig()
-    end)
-    AntiDie.refresh()
-    setInstantResetOnDieVisual = function(on) end
-    setAntiFlingVisual = mkToggle("Anti Fling", function(on)
-        AntiFling.setEnabled(on)
         saveConfig()
     end)
 
-    -- ==================== VISUAL SECTION ====================
-    mkSect("VISUAL")
+    -- ========== COMBAT ==========
+    local combatPage = pages["Combat"]
+    makeSectionHeader(combatPage, "Safety")
+    makeToggleRow(combatPage, "Anti Die", true, function(on)
+        pcall(function() if AntiDie and AntiDie.setEnabled then AntiDie.setEnabled(on) end end)
+        saveConfig()
+    end)
+    makeToggleRow(combatPage, "Anti Fling", State.antiFlingEnabled, function(on)
+        State.antiFlingEnabled = on
+        pcall(function() if AntiFling and AntiFling.setEnabled then AntiFling.setEnabled(on) end end)
+        saveConfig()
+    end)
+    makeToggleRow(combatPage, "Body Lock", State.bodyLockEnabled, function(on)
+        State.bodyLockEnabled = on
+        pcall(function() if BodyLock and BodyLock.setEnabled then BodyLock.setEnabled(on) end end)
+        saveConfig()
+    end)
+    makeSectionHeader(combatPage, "Offense")
+    makeToggleRow(combatPage, "Bat Aimbot", State.autoBatEnabled, function(on)
+        State.autoBatEnabled = on
+        if on then
+            pcall(function() if queueAutoBatStart then queueAutoBatStart() end end)
+        else
+            pcall(function() if disableAutoBat then disableAutoBat() end end)
+        end
+        saveConfig()
+    end)
+    makeToggleRow(combatPage, "TP Bat", State.tpBatEnabled, function(on)
+        State.tpBatEnabled = on
+        pcall(function() if TpBat then if on and TpBat.enable then TpBat.enable() elseif TpBat.setEnabled then TpBat.setEnabled(on) elseif TpBat.toggle and on ~= (TpBat.active) then TpBat.toggle() end end end)
+        saveConfig()
+    end)
+    makeToggleRow(combatPage, "Infinite Jump", State.infJumpEnabled, function(on)
+        State.infJumpEnabled = on; saveConfig()
+    end)
+    makeToggleRow(combatPage, "Anti Ragdoll", State.antiRagdollEnabled, function(on)
+        State.antiRagdollEnabled = on; saveConfig()
+    end)
 
-    -- PRINTED-style ESP / Tracers, recolored to K2 grey.
-    -- These are isolated to player characters and clean up when disabled.
-    do
-        local visualGrey = Color3.fromRGB(200, 208, 220)
-        local visualLight = Color3.fromRGB(235, 238, 245)
-        local espEnabled, tracersEnabled = State.espEnabled == true, State.tracersEnabled == true
-        local espObjects, tracerLines = {}, {}
-        local visualConn
-
-        local function clearESP(player)
-            local item = espObjects[player]
-            if not item then return end
-            if item.highlight then pcall(function() item.highlight:Destroy() end) end
-            if item.tag then pcall(function() item.tag:Destroy() end) end
-            espObjects[player] = nil
-        end
-
-        local function setupESP(player)
-            clearESP(player)
-            if not espEnabled or player == LP then return end
-            local character = player.Character
-            local root = character and character:FindFirstChild("HumanoidRootPart")
-            local head = character and character:FindFirstChild("Head")
-            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-            if not root or not head or not humanoid or humanoid.Health <= 0 then return end
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "K2PrintedESP"
-            highlight.Adornee = character
-            highlight.FillColor = visualGrey
-            highlight.OutlineColor = visualLight
-            highlight.FillTransparency = 0.72
-            highlight.OutlineTransparency = 0.05
-            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            highlight.Parent = character
-            local billboard = Instance.new("BillboardGui")
-            billboard.Name = "K2PrintedESPTag"
-            billboard.Adornee = head
-            billboard.Size = UDim2.fromOffset(150, 22)
-            billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-            billboard.AlwaysOnTop = true
-            billboard.Parent = head
-            local label = Instance.new("TextLabel")
-            label.BackgroundTransparency = 1
-            label.Size = UDim2.fromScale(1, 1)
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 11
-            label.TextColor3 = visualLight
-            label.TextStrokeTransparency = 0.35
-            label.Text = player.DisplayName
-            label.Parent = billboard
-            espObjects[player] = {highlight = highlight, tag = billboard, character = character}
-        end
-
-        local function clearTracer(player)
-            local line = tracerLines[player]
-            if line then pcall(function() line:Destroy() end) end
-            tracerLines[player] = nil
-        end
-
-        local function ensureTracer(player)
-            if player == LP or tracerLines[player] then return end
-            local line = Instance.new("Frame")
-            line.Name = "K2PrintedTracer"
-            line.AnchorPoint = Vector2.new(0.5, 0.5)
-            line.BorderSizePixel = 0
-            line.BackgroundColor3 = visualGrey
-            line.BackgroundTransparency = 0.08
-            line.Visible = false
-            line.ZIndex = 80
-            line.Parent = gui
-            local stroke = Instance.new("UIStroke")
-            stroke.Color = visualLight
-            stroke.Thickness = 1
-            stroke.Transparency = 0.15
-            stroke.Parent = line
-            tracerLines[player] = line
-        end
-
-        local function refreshPlayerVisuals()
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LP then
-                    if espEnabled then
-                        local item = espObjects[player]
-                        if not item or item.character ~= player.Character or not item.highlight or not item.highlight.Parent then setupESP(player) end
-                    else
-                        clearESP(player)
-                    end
-                    if tracersEnabled then ensureTracer(player) else clearTracer(player) end
-                end
-            end
-            for player in pairs(espObjects) do if not player.Parent then clearESP(player) end end
-            for player in pairs(tracerLines) do if not player.Parent then clearTracer(player) end end
-        end
-
-        visualConn = RunService.RenderStepped:Connect(function()
-            if not espEnabled and not tracersEnabled then return end
-            refreshPlayerVisuals()
-            local camera = workspace.CurrentCamera
-            if not camera then return end
-            local viewport = camera.ViewportSize
-            local origin = Vector2.new(viewport.X * 0.5, viewport.Y - 8)
-            for player, line in pairs(tracerLines) do
-                local character = player.Character
-                local root = character and character:FindFirstChild("HumanoidRootPart")
-                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                if tracersEnabled and root and humanoid and humanoid.Health > 0 then
-                    local point, onScreen = camera:WorldToViewportPoint(root.Position)
-                    if onScreen and point.Z > 0 then
-                        local target = Vector2.new(point.X, point.Y)
-                        local delta = target - origin
-                        line.Position = UDim2.fromOffset((origin.X + target.X) * 0.5, (origin.Y + target.Y) * 0.5)
-                        line.Size = UDim2.fromOffset(delta.Magnitude, 2)
-                        line.Rotation = math.deg(math.atan2(delta.Y, delta.X))
-                        line.Visible = true
-                    else line.Visible = false end
-                else line.Visible = false end
-            end
-        end)
-        UI.addCleanup(function()
-            if visualConn then visualConn:Disconnect() end
-            for player in pairs(espObjects) do clearESP(player) end
-            for player in pairs(tracerLines) do clearTracer(player) end
-        end)
-        Players.PlayerRemoving:Connect(function(player) clearESP(player); clearTracer(player) end)
-
-        applyESPState = function(on)
-            espEnabled = on == true
-            State.espEnabled = espEnabled
-            if espEnabled then
-                refreshPlayerVisuals()
-            else
-                for player in pairs(espObjects) do clearESP(player) end
-            end
-            if setESPVisual then setESPVisual(espEnabled) end
-        end
-        applyTracersState = function(on)
-            tracersEnabled = on == true
-            State.tracersEnabled = tracersEnabled
-            if tracersEnabled then
-                refreshPlayerVisuals()
-            else
-                for player, line in pairs(tracerLines) do line.Visible = false; clearTracer(player) end
-            end
-            if setTracersVisual then setTracersVisual(tracersEnabled) end
-        end
-        setESPVisual = mkToggle("ESP", function(on)
-            applyESPState(on)
-            saveConfig()
-        end)
-        setTracersVisual = mkToggle("Tracers", function(on)
-            applyTracersState(on)
-            saveConfig()
-        end)
-        -- Apply previously saved states after the UI rows and cleanup hooks exist.
-        if espEnabled then task.defer(function() applyESPState(true) end) end
-        if tracersEnabled then task.defer(function() applyTracersState(true) end) end
-    end
-    do
-        local row = mkRow(36)
-        local label = mkLabel(row, "Anim Pack")
-        label.Size = UDim2.new(0.36, 0, 1, 0)
-        local value = Instance.new("TextLabel", row)
-        value.Name = "AnimPackValue"
-        -- Keep the selected pack entirely to the left of the arrow. The old
-        -- 1-wide value box extended behind it, hiding longer animation names.
-        value.Position = UDim2.new(0.38, 0, 0, 0)
-        value.Size = UDim2.new(0.62, -62, 1, 0)
-        value.BackgroundTransparency = 1
-        value.TextColor3 = UI.theme.light
-        value.Font = Enum.Font.GothamBold
-        value.TextSize = 10
-        value.TextTruncate = Enum.TextTruncate.AtEnd
-        value.TextXAlignment = Enum.TextXAlignment.Right
-        value.ZIndex = 5
-        local arrow = Instance.new("TextButton", row)
-        arrow.Name = "AnimPackArrow"
-        arrow.Size = UDim2.fromOffset(30, 24)
-        arrow.Position = UDim2.new(1, -42, 0.5, -12)
-        arrow.BackgroundColor3 = UI.theme.button
-        arrow.BorderSizePixel = 0
-        arrow.AutoButtonColor = false
-        arrow.Text = "▼"
-        arrow.TextColor3 = UI.theme.light
-        arrow.Font = Enum.Font.GothamBlack
-        arrow.TextSize = 12
-        arrow.ZIndex = 5
-        Instance.new("UICorner", arrow).CornerRadius = UDim.new(0, 6)
-        local arrowStroke = Instance.new("UIStroke", arrow)
-        arrowStroke.Color = UI.theme.border
-
-        local open = false
-        local optionRows = {}
-        local optionButtons = {}
-        local dropdownGeneration = 0
-        local optionOpenSize = UDim2.new(1, 0, 0, 27)
-        local optionClosedSize = UDim2.new(1, 0, 0, 0)
-        local function refresh(name)
-            value.Text = name
-            for pack, button in pairs(optionButtons) do
-                local selected = pack == name
-                button.TextColor3 = selected and UI.theme.text or UI.theme.muted
-                button.BackgroundColor3 = selected and UI.theme.accent or UI.theme.button
-            end
-        end
-        local function setOpen(state)
-            open = state == true
-            dropdownGeneration += 1
-            local generation = dropdownGeneration
-            arrow.Text = open and "▲" or "▼"
-            UI.animate(arrow, {BackgroundColor3 = open and UI.theme.accent or UI.theme.button}, 0.16)
-            -- During GUI construction, close instantly so the list cannot
-            -- flash before the first category selection finishes.
-            if not UI.ready then
-                for _, option in ipairs(optionRows) do
-                    option:SetAttribute("K2ManualVisible", open)
-                    option.Size = open and optionOpenSize or optionClosedSize
-                    option.Visible = open and UI.activeSection == "VISUAL"
-                end
-                return
-            end
-            if open then
-                -- Fade + expand each option in a short cascade instead of
-                -- dropping the complete list into view at once.
-                for index, option in ipairs(optionRows) do
-                    option:SetAttribute("K2ManualVisible", true)
-                    option.Size = optionClosedSize
-                    option.Visible = false
-                    task.delay((index - 1) * 0.012, function()
-                        if generation ~= dropdownGeneration or not open or not option.Parent then return end
-                        UI.show(option, true)
-                        UI.animate(option, {Size = optionOpenSize}, 0.18)
-                    end)
-                end
-            else
-                -- Collapse and fade in reverse order; UI.show's generation
-                -- guard prevents old close tweens from hiding a reopened list.
-                for index = #optionRows, 1, -1 do
-                    local option = optionRows[index]
-                    option:SetAttribute("K2ManualVisible", false)
-                    if option.Visible then
-                        task.delay((#optionRows - index) * 0.008, function()
-                            if generation ~= dropdownGeneration or open or not option.Parent then return end
-                            UI.animate(option, {Size = optionClosedSize}, 0.16)
-                            UI.show(option, false)
-                        end)
-                    else
-                        option.Size = optionClosedSize
-                        option.Visible = false
-                    end
-                end
-            end
-        end
-        for _, pack in ipairs(HORIZON_ANIMATION_PACK_LIST) do
-            local option = mkRow(27)
-            option.Name = "AnimPack_" .. pack:gsub("%W", "")
-            option:SetAttribute("K2ManualVisible", false)
-            local button = Instance.new("TextButton", option)
-            button.Size = UDim2.new(1, -12, 1, -4)
-            button.Position = UDim2.new(0, 6, 0, 2)
-            button.BackgroundColor3 = UI.theme.button
-            button.BorderSizePixel = 0
-            button.AutoButtonColor = false
-            button.Text = pack
-            button.TextColor3 = UI.theme.muted
-            button.Font = Enum.Font.GothamBold
-            button.TextSize = 10
-            button.ZIndex = 5
-            Instance.new("UICorner", button).CornerRadius = UDim.new(0, 5)
-            local stroke = Instance.new("UIStroke", button)
-            stroke.Color = UI.theme.border
-            stroke.Transparency = 0.25
-            button.Activated:Connect(function()
-                if _anyKeyListening then return end
-                AnimPack.apply(pack)
-                saveConfig()
-                setOpen(false) -- selecting a pack closes the list immediately.
-            end)
-            table.insert(optionRows, option)
-            optionButtons[pack] = button
-        end
-        AnimPack.visual = refresh
-        refresh(State.animPack)
-        arrow.Activated:Connect(function()
-            if _anyKeyListening then return end
-            setOpen(not open)
-        end)
-        setOpen(false)
-    end
-    -- Three-way Anti Ragdoll selector. Opening it never enables an engine.
-    do
-        local row = mkRow(34)
-        row.Name = "AntiRagdollRow"
-        mkLabel(row, "Anti Ragdoll")
-        local value = Instance.new("TextLabel", row)
-        value.Name = "SelectedMode"
-        value.BackgroundTransparency = 1
-        value.Position = UDim2.new(0.48, 0, 0, 0)
-        value.Size = UDim2.new(0.52, -42, 1, 0)
-        value.TextColor3 = UI.theme.light
-        value.Font = Enum.Font.GothamBold
-        value.TextSize = 10
-        value.TextXAlignment = Enum.TextXAlignment.Right
-        value.ZIndex = 5
-        local arrow = Instance.new("TextButton", row)
-        arrow.Name = "AntiRagdollArrow"
-        arrow.Size = UDim2.fromOffset(28, 24)
-        arrow.Position = UDim2.new(1, -33, 0.5, -12)
-        arrow.BackgroundColor3 = UI.theme.button
-        arrow.BorderSizePixel = 0
-        arrow.AutoButtonColor = false
-        arrow.Text = "^"
-        arrow.Font = Enum.Font.GothamBlack
-        arrow.TextSize = 18
-        arrow.TextColor3 = UI.theme.text
-        arrow.ZIndex = 6
-        Instance.new("UICorner", arrow).CornerRadius = UDim.new(0, 6)
-        local options = Instance.new("CanvasGroup", sf)
-        options.Name = "AntiRagdollOptions"
-        options.Size = UDim2.new(1, 0, 0, 104)
-        options.LayoutOrder = LO()
-        options.BackgroundColor3 = UI.theme.panel
-        options.BorderSizePixel = 0
-        options.ClipsDescendants = true
-        Instance.new("UICorner", options).CornerRadius = UDim.new(0, 6)
-        local buttons = {}
-        local labels = {Off = "Off", Normal = "V1", Custom = "V2"}
-        for index, mode in ipairs({"Off", "Normal", "Custom"}) do
-            local button = Instance.new("TextButton", options)
-            button.Name = "AntiRagdoll" .. mode
-            button.Size = UDim2.new(1, -10, 0, 28)
-            button.Position = UDim2.fromOffset(5, 5 + (index - 1) * 33)
-            button.BackgroundColor3 = UI.theme.button
-            button.BorderSizePixel = 0
-            button.AutoButtonColor = false
-            button.Text = labels[mode]
-            button.TextColor3 = UI.theme.text
-            button.Font = Enum.Font.GothamBold
-            button.TextSize = 11
-            button.ZIndex = 5
-            Instance.new("UICorner", button).CornerRadius = UDim.new(0, 5)
-            buttons[mode] = button
-            button.Activated:Connect(function()
-                if _anyKeyListening or not Ragdoll.alive then return end
-                Ragdoll.setMode(mode)
-                saveConfig()
-            end)
-        end
-        Ragdoll.refreshUI = function()
-            if not Ragdoll.alive then return end
-            UI.text(value, labels[State.antiRagdollMode] or "Off")
-            UI.animate(arrow, {Rotation = Ragdoll.open and 180 or 0, BackgroundColor3 = Ragdoll.open and UI.theme.accent or UI.theme.button})
-            for mode, button in pairs(buttons) do
-                UI.animate(button, {BackgroundColor3 = mode == State.antiRagdollMode and UI.theme.accent or UI.theme.button})
-            end
-            UI.row(options, Ragdoll.open, 104)
-        end
-        arrow.Activated:Connect(function()
-            if _anyKeyListening or not Ragdoll.alive then return end
-            Ragdoll.open = not Ragdoll.open
-            Ragdoll.refresh()
-        end)
-        setAntiRagVisual = function() Ragdoll.refresh() end
-        Ragdoll.refresh()
-    end
-    setUnwalkVisual = mkToggle("Unwalk", function(on)
+    -- ========== VISUALS ==========
+    local visPage = pages["Visuals"]
+    makeSectionHeader(visPage, "ESP")
+    makeToggleRow(visPage, "ESP", State.espEnabled, function(on)
+        State.espEnabled = on; saveConfig()
+    end)
+    makeToggleRow(visPage, "Tracers", State.tracersEnabled, function(on)
+        State.tracersEnabled = on; saveConfig()
+    end)
+    makeSectionHeader(visPage, "Display")
+    makeToggleRow(visPage, "FPS Boost", State.fpsBoostEnabled, function(on)
+        State.fpsBoostEnabled = on; saveConfig()
+    end)
+    makeToggleRow(visPage, "Unwalk", State.unwalkEnabled, function(on)
         State.unwalkEnabled = on
-        if on then startUnwalk() else stopUnwalk() end
+        if on then pcall(function() if startUnwalk then startUnwalk() end end)
+        else pcall(function() if stopUnwalk then stopUnwalk() end end) end
         saveConfig()
     end)
-    mkAction("Skin Changer", function()
-        SkinChanger.openViewer()
-    end, "OPEN")
-    setAntiLagVisual = mkToggle("Anti Lag", function(on)
-        if on then enableAntiLag() else disableAntiLag() end
+
+    -- ========== MISC ==========
+    local miscPage = pages["Misc"]
+    makeSectionHeader(miscPage, "Utility")
+    makeToggleRow(miscPage, "Intro Screen", State.introEnabled ~= false, function(on)
+        State.introEnabled = on; saveConfig()
+    end)
+    local saveBtn = Instance.new("TextButton", miscPage)
+    saveBtn.Size = UDim2.new(1, 0, 0, 36)
+    saveBtn.BackgroundColor3 = glass.panel
+    saveBtn.Text = "SAVE CONFIG"
+    saveBtn.TextColor3 = glass.text
+    saveBtn.Font = Enum.Font.GothamBold
+    saveBtn.TextSize = 12
+    mkCorner(saveBtn, 8)
+    mkStroke(saveBtn, glass.border, 0.8)
+    saveBtn.MouseButton1Click:Connect(function()
         saveConfig()
-    end)
-    setStretchRezVisual = mkToggle("Stretch Rez", function(on)
-        if on then enableStretchRez() else disableStretchRez() end
-        saveConfig()
-    end)
-    -- POV: each tap raises the camera FOV by 10 (70 -> 120), then wraps to 70.
-    -- State.povValue feeds the single FOV owner, so Stretch toggles restore
-    -- this value instead of killing it.
-    do
-        local row = mkRow(32); mkLabel(row, "POV")
-        local povFov = tonumber(safeReadFile("k2POV.txt")) or 70
-        povFov = math.clamp(math.floor(povFov / 10 + 0.5) * 10, 70, 120)
-        State.povValue = povFov
-        if povFov > 70 and not State.stretchRezEnabled then
-            Camera.FieldOfView = povFov
-        end
-        local povVal = Instance.new("TextLabel", row)
-        povVal.Size = UDim2.new(0, 110, 1, 0)
-        povVal.Position = UDim2.new(1, -118, 0, 0)
-        povVal.BackgroundTransparency = 1
-        povVal.Text = tostring(povFov)
-        povVal.TextColor3 = RED
-        povVal.Font = Enum.Font.GothamBlack
-        povVal.TextSize = 11
-        povVal.TextXAlignment = Enum.TextXAlignment.Right
-        local clk = Instance.new("TextButton", row)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 2
-        clk.Activated:Connect(function()
-            if _anyKeyListening then return end
-            povFov += 10
-            if povFov > 120 then povFov = 70 end
-            State.povValue = povFov
-            povVal.Text = tostring(povFov)
-            safeWriteFile("k2POV.txt", tostring(povFov))
-            if not State.stretchRezEnabled then
-                Camera.FieldOfView = povFov
-            end
-        end)
-    end
-    do
-        setFPSBoostVisual = mkToggle("FPS Boost", function(on)
-            if on then applyFPSBoost() else disableFPSBoost() end
-            saveConfig()
-        end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Sky Theme")
-        local skyIndex = 1
-        for i, name in ipairs(K2_SKY_ORDER) do
-            if name == currentSkyTheme then skyIndex = i; break end
-        end
-        local skyVal = Instance.new("TextLabel", row)
-        skyVal.Size = UDim2.new(0, 110, 1, 0)
-        skyVal.Position = UDim2.new(1, -118, 0, 0)
-        skyVal.BackgroundTransparency = 1
-        skyVal.Text = K2_SKY_ORDER[skyIndex]
-        skyVal.TextColor3 = RED
-        skyVal.Font = Enum.Font.GothamBlack
-        skyVal.TextSize = 11
-        skyVal.TextXAlignment = Enum.TextXAlignment.Right
-        setSkyVisual = function(name)
-            for i, n in ipairs(K2_SKY_ORDER) do
-                if n == name then skyIndex = i; break end
-            end
-            skyVal.Text = K2_SKY_ORDER[skyIndex]
-        end
-        local clk = Instance.new("TextButton", row)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 2
-        clk.Activated:Connect(function()
-            if _anyKeyListening then return end
-            skyIndex = skyIndex % #K2_SKY_ORDER + 1
-            local name = K2_SKY_ORDER[skyIndex]
-            skyVal.Text = name
-            currentSkyTheme = name
-            k2ApplySky(name)
-            saveConfig()
-        end)
-    end
-
-    -- ==================== KEYBINDS SECTION ====================
-    mkSect("KEYBINDS")
-    do
-        local row = mkRow(32); mkLabel(row, "Auto Left")
-        mkKB(row, KB.AutoLeft, function(k, isGp)
-            if isGp then KB.AutoLeft.gp = k; KB.AutoLeft.kb = nil else KB.AutoLeft.kb = k; KB.AutoLeft.gp = nil end
-            saveConfig()
-        end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Auto Right")
-        mkKB(row, KB.AutoRight, function(k, isGp)
-            if isGp then KB.AutoRight.gp = k; KB.AutoRight.kb = nil else KB.AutoRight.kb = k; KB.AutoRight.gp = nil end
-            saveConfig()
-        end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Auto Bat")
-        mkKB(row, KB.AutoBat, function(k, isGp)
-            if isGp then KB.AutoBat.gp = k; KB.AutoBat.kb = nil else KB.AutoBat.kb = k; KB.AutoBat.gp = nil end
-            saveConfig()
-        end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Drop Brainrot")
-        mkKB(row, KB.DropBrainrot, function(k, isGp)
-            if isGp then KB.DropBrainrot.gp = k; KB.DropBrainrot.kb = nil else KB.DropBrainrot.kb = k; KB.DropBrainrot.gp = nil end
-            saveConfig()
-        end)
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "TP Floor")
-        mkKB(row, KB.TPFloor, function(k, isGp)
-            if isGp then KB.TPFloor.gp = k; KB.TPFloor.kb = nil else KB.TPFloor.kb = k; KB.TPFloor.gp = nil end
-            saveConfig()
-        end)
-    end
-    do
-        TpBat.uiSet = mkToggleKB("Tp Bat", KB.TpBat,
-            function(on) TpBat.setEnabled(on); saveConfig() end,
-            function(k, isGp)
-                if isGp then KB.TpBat.gp = k; KB.TpBat.kb = nil else KB.TpBat.kb = k; KB.TpBat.gp = nil end
-                saveConfig()
-            end)
-        TpBat.refresh()
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Insta Reset")
-        mkKB(row, KB.InstantReset, function(k, isGp)
-            if isGp then KB.InstantReset.gp = k; KB.InstantReset.kb = nil else KB.InstantReset.kb = k; KB.InstantReset.gp = nil end
-            saveConfig()
-        end)
-    end
-
-    -- ==================== MISC SECTION ====================
-    mkSect("MISC")
-    -- Intro screen: plays the animated black-space intro on script load.
-    setIntroVisual = mkToggle("Intro", function(on)
-        State.introEnabled = on
-        saveConfig()
-    end)
-    if setIntroVisual then setIntroVisual(State.introEnabled) end
-    -- BUTTON STYLE: three shapes. Square = sharp square corners, Rounded =
-    -- the usual soft corner, Circle = fully round (affects hub + mobile buttons).
-    do
-        local row = mkRow(32); mkLabel(row, "Button Style")
-        local styleLabels = {"Square", "Rounded", "Circle"}
-        local styleRadii = {UDim.new(0, 0), UDim.new(0, 4), UDim.new(1, 0)}
-        local styleRadiiMB = {UDim.new(0, 0), UDim.new(0, 14), UDim.new(1, 0)}
-        local styleBtns = {}
-        local currentStyle = 1
-        -- Old saves were 1 = rounded-ish "Square", 2 = Circle; keep their look.
-        local savedStyle = tonumber(safeReadFile("k2ButtonStyle.txt"))
-        if savedStyle == 1 then currentStyle = 2
-        elseif savedStyle and savedStyle >= 2 and savedStyle <= 3 then currentStyle = 3 end
-
-        local allButtons = {}
-        local function applyButtonStyle(idx)
-            currentStyle = idx
-            for i, b in ipairs(styleBtns) do
-                UI.animate(b, {BackgroundColor3 = (i == idx) and UI.theme.accent or UI.theme.button})
-                UI.animate(b, {TextColor3 = (i == idx) and UI.theme.text or UI.theme.muted})
-            end
-            local cornerRadius = styleRadii[idx] or styleRadii[1]
-            local mbRadius = styleRadiiMB[idx] or styleRadiiMB[1]
-            for _, btn in ipairs(allButtons) do
-                local corner = btn:FindFirstChildOfClass("UICorner")
-                if corner then UI.animate(corner, {CornerRadius = cornerRadius}, 0.25) end
-            end
-            for _, mbFrame in ipairs(mbContainers or {}) do
-                local corner = mbFrame:FindFirstChildOfClass("UICorner")
-                if corner then UI.animate(corner, {CornerRadius = mbRadius}, 0.25) end
-            end
-            safeWriteFile("k2ButtonStyle.txt", tostring(idx))
-        end
-        local totalW = 60 * #styleLabels + 6 * (#styleLabels - 1)
-        local startX = -(totalW + 4)
-        for i, lbl in ipairs(styleLabels) do
-            local b = Instance.new("TextButton", row)
-            b.Size = UDim2.new(0, 60, 0, 22)
-            b.Position = UDim2.new(1, startX + (i - 1) * 66, 0.5, -11)
-            b.BackgroundColor3 = (i == currentStyle) and UI.theme.accent or UI.theme.button
-            b.BorderSizePixel = 0
-            b.Text = lbl
-            b.TextColor3 = (i == currentStyle) and UI.theme.text or UI.theme.muted
-            b.Font = Enum.Font.GothamBold
-            b.TextSize = 10
-            b.ZIndex = 5
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
-            Instance.new("UIStroke", b).Color = UI.theme.border
-            table.insert(styleBtns, b)
-            b.Activated:Connect(function() applyButtonStyle(i) end)
-        end
-        task.defer(function()
-            for _, desc in ipairs(sf:GetDescendants()) do
-                if desc:IsA("TextButton") then table.insert(allButtons, desc) end
-            end
-            for _, btn in ipairs(styleBtns or {}) do table.insert(allButtons, btn) end
-            applyButtonStyle(currentStyle)
-        end)
-    end
-    -- AUTO GRAB CONTROLS (moved from the former GRAB category)
-    -- The fixed 61-stud targeting and 75/80/85/90 modes remain unchanged.
-    do
-        setAutoGrabVisual = mkToggle("Auto Grab", function(on)
-            if on then
-                Grab.startNormal()
-            else
-                Grab.stopAll()
-                Grab.refresh()
-            end
-            saveConfig()
-        end)
-
-        local modesRow = mkRow(44)
-        local modesLabel = mkLabel(modesRow, "Modes")
-        modesLabel.Size = UDim2.new(0.27, 0, 1, 0)
-        local modeButtons = {}
-        local modeValues = {75, 80, 85, 90}
-        local function refreshModes()
-            for i, button in ipairs(modeButtons) do
-                local selected = State.autoGrabMode == modeValues[i]
-                UI.animate(button, {BackgroundColor3 = selected and UI.theme.accent or UI.theme.button})
-                UI.animate(button, {TextColor3 = selected and UI.theme.text or UI.theme.muted})
-            end
-        end
-        for i, value in ipairs(modeValues) do
-            local button = Instance.new("TextButton", modesRow)
-            button.Name = "AutoGrabMode" .. tostring(value)
-            button.Size = UDim2.new(0.17, -4, 0, 28)
-            button.Position = UDim2.new(0.28 + (i - 1) * 0.18, 0, 0.5, -14)
-            button.BackgroundColor3 = UI.theme.button
-            button.BorderSizePixel = 0
-            button.AutoButtonColor = false
-            button.Text = tostring(value) .. "%"
-            button.TextColor3 = UI.theme.muted
-            button.Font = Enum.Font.GothamBlack
-            button.TextSize = 12
-            button.ZIndex = 5
-            Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
-            local stroke = Instance.new("UIStroke", button)
-            stroke.Color = UI.theme.border
-            stroke.Transparency = 0.15
-            button.Activated:Connect(function()
-                State.autoGrabMode = value
-                State.autoGrabStopEnabled = true
-                State.autoGrabStopTime = (math.clamp(value, 0, 100) / 100) * math.max(tonumber(State.StealV1.StealDuration) or 1.3, 0.05)
-                if Grab.yout and Grab.yout.active then
-                    -- The active session reads its selected stop time only at its start;
-                    -- the next attempt will use this selection without corrupting its current timer.
-                end
-                Grab.refresh()
-                refreshModes()
-                saveConfig()
-            end)
-            modeButtons[i] = button
-        end
-        refreshModes()
-
-        local zoomRow = mkRow(40)
-        local zoomLabel = mkLabel(zoomRow, "Auto Grab Size")
-        zoomLabel.Size = UDim2.new(1, -150, 1, 0)
-        local zoomValue = Instance.new("TextLabel", zoomRow)
-        zoomValue.Name = "AutoGrabScaleValue"
-        zoomValue.Position = UDim2.new(1, -116, 0, 0)
-        zoomValue.Size = UDim2.fromOffset(58, 40)
-        zoomValue.BackgroundTransparency = 1
-        zoomValue.TextColor3 = UI.theme.light
-        zoomValue.Font = Enum.Font.GothamBold
-        zoomValue.TextSize = 12
-        zoomValue.TextXAlignment = Enum.TextXAlignment.Center
-        local function zoomButton(text, offset, delta)
-            local button = Instance.new("TextButton", zoomRow)
-            button.Size = UDim2.fromOffset(30, 28)
-            button.Position = UDim2.new(1, offset, 0.5, -14)
-            button.BackgroundColor3 = UI.theme.button
-            button.BorderSizePixel = 0
-            button.AutoButtonColor = false
-            button.Text = text
-            button.TextColor3 = UI.theme.text
-            button.Font = Enum.Font.GothamBlack
-            button.TextSize = 17
-            button.ZIndex = 5
-            Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
-            button.Activated:Connect(function()
-                Grab.changeScale(delta, "V1")
-                zoomValue.Text = tostring(math.floor(Grab.getScale("V1") * 100 + 0.5)) .. "%"
-                saveConfig()
-            end)
-        end
-        zoomButton("-", -70, -0.1)
-        zoomButton("+", -34, 0.1)
-        zoomValue.Text = tostring(math.floor(Grab.getScale("V1") * 100 + 0.5)) .. "%"
-        if setAutoGrabVisual then setAutoGrabVisual(State.SemiNormalOpen) end
-        Grab.refresh()
-    end
-
-    do
-        local row = mkRow(40); mkLabel(row, "Hide GUI")
-        mkKB(row, KB.GuiHide, function(k, isGp)
-            if isGp then KB.GuiHide.gp = k; KB.GuiHide.kb = nil else KB.GuiHide.kb = k; KB.GuiHide.gp = nil end
-            saveConfig()
-        end)
-    end
-
-    local mbToggleSv = nil
-    do
-        local row = mkRow(32); mkLabel(row, "Mobile Buttons")
-        local pill, dot = mkPill(row, 42); animPill(pill, dot, true)
-        local on = true
-        local function sv(s) on = s; animPill(pill, dot, s) end
-        mbToggleSv = sv
-        local clk = Instance.new("TextButton", pill)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 5
-        clk.Activated:Connect(function()
-            on = not on
-            sv(on)
-            for _, c in ipairs(mbContainers) do UI.show(c, on) end
-            safeWriteFile("k2MobileVis.txt", tostring(on))
-        end)
-        pill.ZIndex = 3; dot.ZIndex = 4
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Lock Mobile + UI")
-        local pill, dot = mkPill(row, 42)
-        local on = false
-        local function sv(s)
-            on = s
-            animPill(pill, dot, s)
-            mbLocked = s
-            UI.setDragLocked(s)
-            safeWriteFile("k2MobileLock.txt", tostring(s))
-        end
-        _setMbLockVisual = sv
-        local clk = Instance.new("TextButton", pill)
-        clk.Size = UDim2.new(1, 0, 1, 0)
-        clk.BackgroundTransparency = 1
-        clk.Text = ""
-        clk.ZIndex = 5
-        clk.Activated:Connect(function() sv(not on) end)
-        pill.ZIndex = 3; dot.ZIndex = 4
-        local savedLock = safeReadFile("k2MobileLock.txt")
-        if savedLock == "true" then sv(true) end
-    end
-    do
-        local row = mkRow(32); mkLabel(row, "Reset Panel")
-        local resetBtn = Instance.new("TextButton", row)
-        resetBtn.Size = UDim2.new(0, 80, 0, 24)
-        resetBtn.Position = UDim2.new(1, -90, 0.5, -12)
-        resetBtn.BackgroundColor3 = UI.theme.button
-        resetBtn.BorderSizePixel = 0
-        resetBtn.Text = "Reset"
-        resetBtn.TextColor3 = UI.theme.text
-        resetBtn.Font = Enum.Font.GothamBold
-        resetBtn.TextSize = 11
-        resetBtn.ZIndex = 5
-        Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0, 5)
-        Instance.new("UIStroke", resetBtn).Color = UI.theme.border
-        resetBtn.Activated:Connect(function()
-            local orig = resetBtn.Text
-            resetBtn.Text = "..."
-            if resetMobilePositions then resetMobilePositions() end
-            task.delay(0.2, function() resetBtn.Text = orig end)
-        end)
-    end
-    -- ==================== NUMERIC SCALE CONTROLS: - / VALUE / + ====================
-    do
-        local function scaleRow(label, key)
-            local row = mkRow(34)
-            row.Name = key == "main" and "InterfaceScaleRow" or "MobileScaleRow"
-            local title = mkLabel(row, label)
-            title.Size = UDim2.new(1, -146, 1, 0)
-            title.TextTruncate = Enum.TextTruncate.AtEnd
-            local function button(name, text, offset)
-                local control = Instance.new("TextButton", row)
-                control.Name = name
-                control.Size = UDim2.fromOffset(26, 26)
-                control.Position = UDim2.new(1, offset, 0.5, -13)
-                control.BackgroundColor3 = UI.theme.button
-                control.BorderSizePixel = 0
-                control.AutoButtonColor = false
-                control.Text = text
-                control.Font = Enum.Font.GothamBold
-                control.TextSize = 17
-                control.TextColor3 = UI.theme.text
-                control.ZIndex = 5
-                Instance.new("UICorner", control).CornerRadius = UDim.new(0, 6)
-                return control
-            end
-            local prefix = key == "main" and "InterfaceScale" or "MobileScale"
-            local minus = button(prefix .. "Minus", "-", -130)
-            local value = Instance.new("TextLabel", row)
-            value.Name = prefix .. "Value"
-            value.Position = UDim2.new(1, -104, 0, 0)
-            value.Size = UDim2.new(0, 72, 1, 0)
-            value.BackgroundTransparency = 1
-            value.Text = "100%"
-            value.TextColor3 = UI.theme.light
-            value.Font = Enum.Font.GothamBold
-            value.TextSize = 12
-            value.TextXAlignment = Enum.TextXAlignment.Center
-            local plus = button(prefix .. "Plus", "+", -32)
-            Layout.controls[key] = {minus = minus, value = value, plus = plus}
-            local function change(delta)
-                if _anyKeyListening then return end
-                if key == "main" then Layout.applyMain(Layout.mainFactor + delta, true)
-                elseif Layout.applyMobile then Layout.applyMobile(Layout.mobileFactor + delta, true) end
-            end
-            minus.Activated:Connect(function() change(-0.1) end)
-            plus.Activated:Connect(function() change(0.1) end)
-        end
-        scaleRow("UI Scale", "main")
-        scaleRow("Mobile Scale", "mobile")
-        Layout.refresh()
-    end
-
-    -- PC & Gamepad Input Dispatcher
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if _anyKeyListening then return end
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            if gpe or UserInputService:GetFocusedTextBox() then return end
-        elseif not isGamepadInput(input) then return end
-        if not isBindableInput(input) then return end
-        
-        local kc = input.KeyCode
-        if kbMatch(KB.LaggerToggle, kc) then toggleLaggerMode(); saveConfig()
-        elseif kbMatch(KB.SpeedToggle, kc) then toggleCarryMode(); saveConfig()
-        elseif kbMatch(KB.DropBrainrot, kc) then runDrop()
-        elseif kbMatch(KB.TPFloor, kc) then runTPFloor()
-        elseif kbMatch(KB.TpBat, kc) then TpBat.toggle(); saveConfig()
-        elseif kbMatch(KB.AutoLeft, kc) and State.autoPlayMode == "Half" then
-            State.autoLeftEnabled = not State.autoLeftEnabled
-            if State.autoLeftEnabled then queueAutoLeftStart() else stopAutoLeft() end
-            if autoLeftSetVisual then autoLeftSetVisual(State.autoLeftEnabled) end
-        elseif kbMatch(KB.AutoRight, kc) and State.autoPlayMode == "Half" then
-            State.autoRightEnabled = not State.autoRightEnabled
-            if State.autoRightEnabled then queueAutoRightStart() else stopAutoRight() end
-            if autoRightSetVisual then autoRightSetVisual(State.autoRightEnabled) end
-        elseif kbMatch(KB.AutoBat, kc) then
-            if not State.autoBatEnabled then
-                queueAutoBatStart()
-                if setAutoBatVisual then setAutoBatVisual(true) end
-            else
-                State.autoBatEnabled = false
-                disableAutoBat()
-                if setAutoBatVisual then setAutoBatVisual(false) end
-            end
-        elseif kbMatch(KB.InstantReset, kc) then
-            InstantReset.reset()
-        elseif kbMatch(KB.GuiHide, kc) then
-            if UI.isShown(main) then hideGui() else showGui() end
-        end
+        saveBtn.Text = "SAVED"
+        task.delay(1, function() saveBtn.Text = "SAVE CONFIG" end)
     end)
 
-    -- ============================================================
-    -- MOBILE BUTTONS
-    -- ============================================================
-    local MB_OFF     = UI.theme.background
-    local MB_ON_C    = UI.theme.accent
-    local MB_TEXT    = UI.theme.text
-    local MB_TEXT_ON = UI.theme.text
-    -- Edge color: always grey (no red edge on activation).
-    local MB_EDGE_OFF = Color3.fromRGB(139, 92, 246)
-    local BTN_W, BTN_H, GAP, CORNER = 68, 68, 4, 14
+    -- ========== CONFIG / keybind note ==========
+    local cfgPage = pages["Config"]
+    makeSectionHeader(cfgPage, "Keybinds")
+    local kbNote = Instance.new("TextLabel", cfgPage)
+    kbNote.Size = UDim2.new(1, 0, 0, 48)
+    kbNote.BackgroundTransparency = 1
+    kbNote.Text = "Keybinds use the same M10RU bindings.\nChange them via executor config if needed."
+    kbNote.TextColor3 = glass.muted
+    kbNote.Font = Enum.Font.Gotham
+    kbNote.TextSize = 11
+    kbNote.TextWrapped = true
 
-    local _sw = Camera.ViewportSize.X
-    local _sh = Camera.ViewportSize.Y
-    local _totalH = 5 * BTN_H + 4 * GAP
-    local _startY = math.floor((_sh - _totalH) / 2)
-    local _col1X = _sw - (BTN_W * 2 + GAP + 10)
-    local _col2X = _sw - (BTN_W + 10)
+    -- ========== CIRCULAR QUICK BUTTONS (1:1 with K2 reference) ==========
+    local function buildQuickButtons()
+        -- Solid black circles, no purple, no square edges
+        local btnSize = 68
+        local gap = 10
+        local cols = 2
+        local viewport = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(1280, 720)
+        local startX = math.floor(viewport.X - (btnSize * cols + gap * (cols - 1)) - 20)
+        local startY = math.floor(viewport.Y * 0.20)
 
-    local DEFAULT_POSITIONS = {
-        ["DROP_BR"]      = {x = _col1X, y = _startY},
-        ["AUTO_LEFT"]    = {x = _col2X, y = _startY},
-        ["BAT_AIMBOT"]   = {x = _col1X, y = _startY + (BTN_H + GAP) * 1},
-        ["AUTO_RIGHT"]   = {x = _col2X, y = _startY + (BTN_H + GAP) * 1},
-        ["TP_DOWN"]      = {x = _col1X, y = _startY + (BTN_H + GAP) * 2},
-        ["CARRY_SPD"]    = {x = _col2X, y = _startY + (BTN_H + GAP) * 2},
-        ["LAGGER_CARRY"] = {x = _col1X, y = _startY + (BTN_H + GAP) * 3},
-        ["LAGGER_MODE"]  = {x = _col2X, y = _startY + (BTN_H + GAP) * 3},
-        ["TP_BAT"]          = {x = _col1X, y = _startY + (BTN_H + GAP) * 4},
-        ["INSTANT_RESET"]   = {x = _col2X, y = _startY + (BTN_H + GAP) * 4},
-    }
+        local function makeCircleButton(parent, key, label, x, y, onClick)
+            local frame = Instance.new("Frame")
+            frame.Name = "MB_" .. key
+            frame.Size = UDim2.fromOffset(btnSize, btnSize)
+            frame.Position = UDim2.fromOffset(x, y)
+            frame.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+            frame.BackgroundTransparency = 0
+            frame.BorderSizePixel = 0
+            frame.ZIndex = 100
+            frame.Active = true
+            frame.ClipsDescendants = true
+            frame.Parent = parent
 
-    local mbBtnFrames = {}
-    local _lastBtnSave = {}
-    -- Versioned layout migration: old saved coordinates are ignored exactly
-    -- once, so every button starts in its own slot after this update.
-    local MOBILE_LAYOUT_VERSION = "8"
-    local resetSavedMobileLayout = safeReadFile("k2MobileLayoutVersion.txt") ~= MOBILE_LAYOUT_VERSION
-    if resetSavedMobileLayout then
-        safeWriteFile("k2MobileLayoutVersion.txt", MOBILE_LAYOUT_VERSION)
-    end
+            -- Full circle (scale-based corner, not pixel radius)
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(1, 0)
+            corner.Parent = frame
 
-    local function saveBtnPos(key, frame)
-        local now = tick()
-        if _lastBtnSave[key] and now - _lastBtnSave[key] < 0.3 then return end
-        _lastBtnSave[key] = now
-        local position = UI.goal(frame, "Position")
-        safeWriteFile("k2MB_" .. key .. ".txt",
-            tostring(math.floor(position.X.Offset)) .. "," ..
-            tostring(math.floor(position.Y.Offset)))
-    end
+            -- Subtle dark edge only (never purple)
+            local stroke = Instance.new("UIStroke")
+            stroke.Color = Color3.fromRGB(28, 28, 32)
+            stroke.Thickness = 1
+            stroke.Transparency = 0.25
+            stroke.Parent = frame
 
-    local function loadBtnPos(key)
-        local def = DEFAULT_POSITIONS[key] or {x = 10, y = 200}
-        -- Do not reuse coordinates from the old layout: those are what caused
-        -- Carry Speed to appear on Lagger Mode. Future user drag positions are
-        -- still saved and restored normally.
-        if resetSavedMobileLayout then return def end
-        local saved = safeReadFile("k2MB_" .. key .. ".txt")
-        if not saved and key == "INSTANT_RESET" then
-            saved = safeReadFile("k2MB_INSTA_RESET.txt")
-        end
-        if saved then
-            local px, py = saved:match("([^,]+),([^,]+)")
-            if px and py then
-                def = {x = tonumber(px) or def.x, y = tonumber(py) or def.y}
-            end
-        end
-        return def
-    end
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.fromScale(1, 1)
+            btn.BackgroundTransparency = 1
+            btn.BorderSizePixel = 0
+            btn.Text = label
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.Font = Enum.Font.GothamBold
+            btn.TextSize = 11
+            btn.TextWrapped = true
+            btn.ZIndex = 101
+            btn.Parent = frame
 
-    local function makeMB(topTxt, botTxt, key, isToggle, onAction)
-        local pos = loadBtnPos(key)
-        local entry
-
-        local frame = Instance.new("CanvasGroup", gui)
-        frame.Name = "MB_" .. key
-        frame.Size = UDim2.new(0, BTN_W, 0, BTN_H)
-        frame.Position = UDim2.new(0, pos.x, 0, pos.y)
-        UI.animate(frame, {BackgroundColor3 = MB_OFF})
-        frame.BorderSizePixel = 0
-        frame.ZIndex = 100
-        frame.Active = true
-        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, CORNER)
-        -- Grey edge while idle; it turns red while the feature stays active.
-        local frameStroke = Instance.new("UIStroke", frame)
-        frameStroke.Color = MB_EDGE_OFF
-        frameStroke.Thickness = 1.6
-        frameStroke.Transparency = 0.03
-
-        local tL = Instance.new("TextLabel", frame)
-        -- Both words are centered as one compact label (for example TP / BAT),
-        -- rather than being separated across the mobile button.
-        tL.Size = UDim2.new(1, -4, 0.34, 0); tL.Position = UDim2.new(0, 2, 0.18, 0)
-        tL.BackgroundTransparency = 1; tL.Text = topTxt; tL.TextColor3 = MB_TEXT
-        tL.Font = Enum.Font.GothamBlack; tL.TextSize = 13
-        tL.TextXAlignment = Enum.TextXAlignment.Center; tL.TextYAlignment = Enum.TextYAlignment.Center
-        tL.TextWrapped = false; tL.ZIndex = 103
-
-        local bL = Instance.new("TextLabel", frame)
-        bL.Size = UDim2.new(1, -4, 0.34, 0); bL.Position = UDim2.new(0, 2, 0.48, 0)
-        bL.BackgroundTransparency = 1; bL.Text = botTxt; bL.TextColor3 = MB_TEXT
-        bL.Font = Enum.Font.GothamBlack; bL.TextSize = 13
-        bL.TextXAlignment = Enum.TextXAlignment.Center; bL.TextYAlignment = Enum.TextYAlignment.Center
-        bL.TextWrapped = false; bL.ZIndex = 103
-
-        local btn = Instance.new("TextButton", frame)
-        btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundTransparency = 1
-        btn.Text = ""; btn.ZIndex = 104; btn.BorderSizePixel = 0
-        btn.AutoButtonColor = false
-
-        local dragActive = false
-        local dragInputObj = nil
-        local dragStart = nil
-        local dragStartPos = nil
-        local hasDragged = false
-        UI.trackDrag(frame, function()
-            dragActive, dragInputObj, dragStart, dragStartPos = false, nil, nil, nil
-        end)
-
-        btn.InputBegan:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                -- A locked button is still a normal working button: only its
-                -- drag behavior is disabled. Reset the old drag flag first so
-                -- a previous drag never eats this tap.
-                hasDragged = false
-                if mbLocked then
-                    dragActive, dragInputObj, dragStart, dragStartPos = false, nil, nil, nil
+            local dragStart, startPos, moved
+            btn.InputBegan:Connect(function(input)
+                if input.UserInputType ~= Enum.UserInputType.MouseButton1
+                    and input.UserInputType ~= Enum.UserInputType.Touch then
                     return
                 end
-                dragActive = true
-                dragInputObj = inp
-                dragStart = Vector2.new(inp.Position.X, inp.Position.Y)
-                dragStartPos = Vector2.new(frame.Position.X.Offset, frame.Position.Y.Offset)
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(inp)
-            if not dragActive or mbLocked or not dragInputObj then return end
-            local samePointer = inp == dragInputObj or (inp.UserInputType == Enum.UserInputType.MouseMovement
-                and dragInputObj.UserInputType == Enum.UserInputType.MouseButton1)
-            if not samePointer then return end
-            if inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch then
-                local delta = Vector2.new(inp.Position.X, inp.Position.Y) - dragStart
-                if delta.Magnitude > 10 then hasDragged = true end
-                if hasDragged then
-                    UI.animate(frame, {Position = UDim2.new(0, dragStartPos.X + delta.X, 0, dragStartPos.Y + delta.Y)}, 0.08)
-                end
-            end
-        end)
-
-        UserInputService.InputEnded:Connect(function(inp)
-            if inp ~= dragInputObj then return end
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-                if dragActive then
-                    if hasDragged then
-                        if entry then entry.autoPlaced = false end
-                        saveBtnPos(key, frame)
+                dragStart = input.Position
+                startPos = frame.Position
+                moved = false
+                local conn
+                conn = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        conn:Disconnect()
+                        local wasDrag = moved
+                        dragStart = nil
+                        if not wasDrag then
+                            onClick()
+                            -- brief press feedback (stay black family, no purple)
+                            frame.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+                            task.delay(0.12, function()
+                                if frame.Parent then
+                                    frame.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+                                end
+                            end)
+                        end
                     end
-                    dragActive = false
-                    dragInputObj = nil
-                end
-            end
-        end)
-
-        local isOn = false
-        local function setActive(s)
-            isOn = s
-            if s then
-                UI.animate(frame, {BackgroundColor3 = MB_ON_C})
-                UI.animate(tL, {TextColor3 = MB_TEXT_ON})
-                UI.animate(bL, {TextColor3 = MB_TEXT_ON})
-            else
-                UI.animate(frame, {BackgroundColor3 = MB_OFF})
-                UI.animate(tL, {TextColor3 = MB_TEXT})
-                UI.animate(bL, {TextColor3 = MB_TEXT})
-            end
-        end
-
-        if not isToggle then
-            btn.MouseButton1Down:Connect(function()
-                if hasDragged then return end
-                UI.animate(frame, {BackgroundColor3 = MB_ON_C})
-                UI.animate(tL, {TextColor3 = MB_TEXT_ON})
-                UI.animate(bL, {TextColor3 = MB_TEXT_ON})
+                end)
             end)
-            btn.MouseButton1Up:Connect(function()
-                if not isOn then
-                    UI.animate(frame, {BackgroundColor3 = MB_OFF})
-                    UI.animate(tL, {TextColor3 = MB_TEXT})
-                    UI.animate(bL, {TextColor3 = MB_TEXT})
+            UserInputService.InputChanged:Connect(function(input)
+                if not dragStart then return end
+                if input.UserInputType ~= Enum.UserInputType.MouseMovement
+                    and input.UserInputType ~= Enum.UserInputType.Touch then
+                    return
+                end
+                local delta = input.Position - dragStart
+                if delta.Magnitude > 6 then
+                    moved = true
+                    frame.Position = UDim2.fromOffset(
+                        startPos.X.Offset + delta.X,
+                        startPos.Y.Offset + delta.Y
+                    )
                 end
             end)
+
+            table.insert(mbContainers, frame)
+            return frame
         end
 
-        btn.MouseButton1Click:Connect(function()
-            if hasDragged then return end
-            if isToggle then isOn = not isOn; setActive(isOn) end
-            if onAction then onAction(setActive, isOn) end
-        end)
-
-        table.insert(mbContainers, frame)
-        entry = {frame = frame, topLbl = tL, botLbl = bL, key = key}
-        table.insert(mbBtnFrames, entry)
-
-        return setActive, frame, tL, bL
-    end
-
-    local mbVisible = true
-    local savedMbVis = safeReadFile("k2MobileVis.txt")
-    if savedMbVis == "false" then mbVisible = false end
-
-    task.defer(function()
-        if mbToggleSv then mbToggleSv(mbVisible) end
-        for _, c in ipairs(mbContainers) do UI.show(c, mbVisible, true) end
-    end)
-
-    makeMB("DROP", "BR", "DROP_BR", false, function(setActive)
-        runDrop()
-        task.delay(0.3, function() setActive(false) end)
-    end)
-
-    autoLeftSetVisual = makeMB("AUTO", "LEFT", "AUTO_LEFT", false, function(setActive)
-        if State.autoPlayMode == "Auto" then
-            if AutoPlay.active and AutoPlay.route == "left" then
-                stopAutoPlay()
-                setActive(false)
-            else
-                AutoPlay.route = "left"
-                startAutoPlay()
-                setActive(true)
-            end
-            return
-        end
-        State.autoLeftEnabled = not State.autoLeftEnabled
-        if State.autoLeftEnabled then queueAutoLeftStart() else stopAutoLeft() end
-        task.delay(0.2, function() setActive(false) end)
-    end)
-
-    -- Same two buttons are used by both Half and Auto modes.
-    autoPlayLeftSetVisual = autoLeftSetVisual
-    autoPlayRightSetVisual = nil
-
-    local setABmb = makeMB("BAT", "AIMBOT", "BAT_AIMBOT", true, function(setActive, isOn)
-        if isOn then
-            queueAutoBatStart()
-            if setAutoBatVisual then setAutoBatVisual(true) end
-        else
-            State.autoBatEnabled = false
-            disableAutoBat()
-            if setAutoBatVisual then setAutoBatVisual(false) end
-        end
-    end)
-
-    Combat.mobileGood = setABmb
-
-    autoRightSetVisual = makeMB("AUTO", "RIGHT", "AUTO_RIGHT", false, function(setActive)
-        if State.autoPlayMode == "Auto" then
-            if AutoPlay.active and AutoPlay.route == "right" then
-                stopAutoPlay()
-                setActive(false)
-            else
-                AutoPlay.route = "right"
-                startAutoPlay()
-                setActive(true)
-            end
-            return
-        end
-        State.autoRightEnabled = not State.autoRightEnabled
-        if State.autoRightEnabled then queueAutoRightStart() else stopAutoRight() end
-        task.delay(0.2, function() setActive(false) end)
-    end)
-
-    makeMB("TP", "DOWN", "TP_DOWN", false, function(setActive)
-        runTPFloor()
-        task.delay(0.3, function() setActive(false) end)
-    end)
-
-    local setCarrymb = makeMB("CARRY", "SPD", "CARRY_SPD", true, function(setActive, isOn)
-        if State.laggerToggled then State.laggerToggled = false; State.laggerPhase = 0 end
-        State.speedMode = isOn
-        refreshSpeedModeLabel()
-    end)
-
-    Speed.carryVisual = setCarrymb
-
-    local setLagCarrymb = makeMB("LAGGER", "CARRY", "LAGGER_CARRY", false, function(setActive)
-        State.speedMode = false
-        if not State.laggerToggled then
-            State.laggerToggled = true; State.laggerPhase = 2
-        elseif State.laggerPhase == 2 then
-            State.laggerPhase = 1
-        else
-            State.laggerPhase = 2
-        end
-        refreshSpeedModeLabel()
-    end)
-
-    local setLagModemb, _lagModFrame, _lagModTL, _lagModBL
-    setLagModemb, _lagModFrame, _lagModTL, _lagModBL = makeMB("LAGGER", "MODE", "LAGGER_MODE", false, function(setActive)
-        toggleLaggerMode()
-    end)
-
-    TpBat.mobileSet = makeMB("TP", "BAT", "TP_BAT", true, function(setActive, isOn)
-        TpBat.setEnabled(isOn)
-        saveConfig()
-    end)
-    TpBat.refresh()
-
-    makeMB("INSTA", "RESET", "INSTANT_RESET", false, function(setActive)
-        InstantReset.reset()
-        task.delay(0.3, function() setActive(false) end)
-    end)
-
-    -- Independent visual states; never recolor the aimbot from a lagger phase.
-    Speed.mobileRefresh = function()
-        if not UI.alive then return end
-        setABmb(State.autoBatEnabled)
-        setCarrymb(State.speedMode and not State.laggerToggled and not State.autoCarryFromSteal)
-        setLagCarrymb(State.laggerToggled and State.laggerPhase == 2)
-        local normalLagger = State.laggerToggled and State.laggerPhase == 1
-        setLagModemb(normalLagger)
-        if _lagModBL then UI.text(_lagModBL, normalLagger and "SPEED" or "MODE") end
-    end
-    Speed.mobileRefresh()
-
-    -- Show exactly one layout for the selected Auto Play Mode.
-    task.defer(function()
-        local left = gui:FindFirstChild("MB_AUTO_LEFT", true)
-        local right = gui:FindFirstChild("MB_AUTO_RIGHT", true)
-        if left then UI.show(left, true, true) end
-        if right then UI.show(right, true, true) end
-    end)
-
-    do
-        local connection = RunService.Heartbeat:Connect(Speed.mobileRefresh)
-        UI.addCleanup(function()
-            connection:Disconnect()
-            Speed.mobileRefresh = nil
-        end)
-    end
-
-    -- Continuous mobile size control. Reflow untouched default buttons so they
-    -- do not pile on each other; preserve custom dragged placements.
-    do
-        -- Five compact rows, two buttons per row; no overlapping or hidden
-        -- placeholder slots are kept between Carry Speed and the Lagger buttons.
-        local slots = {DROP_BR=1, AUTO_LEFT=2, BAT_AIMBOT=3, AUTO_RIGHT=4,
-            TP_DOWN=5, CARRY_SPD=6, LAGGER_CARRY=7, LAGGER_MODE=8,
-            TP_BAT=9, INSTANT_RESET=10}
-        local function geometry(factor)
-            local view = Layout.viewport()
-            local width = math.floor(68 * factor + 0.5)
-            local gap = math.max(3, math.floor(4 * factor + 0.5))
-            local rows = math.max(1, math.floor((view.Y - 24 + gap) / (width + gap)))
-            local maxColumns = math.max(1, math.floor((view.X - 24 + gap) / (width + gap)))
-            local columns = math.min(maxColumns, math.max(2, math.ceil(10 / rows)))
-            return view, width, gap, columns, rows, maxColumns
-        end
-        function Layout.defaultMobilePosition(key, factor)
-            local view, width, gap, columns = geometry(factor)
-            local slot = (slots[key] or 1) - 1
-            local rows = math.ceil(10 / columns)
-            local totalWidth = columns * width + (columns - 1) * gap
-            local totalHeight = rows * width + (rows - 1) * gap
-            local x = view.X - totalWidth - 10 + (slot % columns) * (width + gap)
-            local y = math.max(12, (view.Y - totalHeight) / 2) + math.floor(slot / columns) * (width + gap)
-            return UDim2.fromOffset(x, y)
-        end
-        function Layout.applyMobile(value, save)
-            local factor = Layout.normalize(value, 0.7, 1.6)
-            -- A very small viewport may need a lower limit to keep all ten controls usable.
-            while factor > 0.7 do
-                local _, _, _, _, rows, columns = geometry(factor)
-                if rows * columns >= 10 then break end
-                factor = Layout.normalize(factor - 0.1, 0.7, 1.6)
-            end
-            Layout.mobileFactor = factor
-            local view, width = geometry(factor)
-            for _, entry in ipairs(mbBtnFrames) do
-                local position = UI.goal(entry.frame, "Position")
-                local scaledDefault = Layout.defaultMobilePosition(entry.key, factor)
-                if entry.autoPlaced == nil then
-                    local original = DEFAULT_POSITIONS[entry.key]
-                    entry.autoPlaced = original and
-                        ((math.abs(position.X.Offset - original.x) < 2 and math.abs(position.Y.Offset - original.y) < 2)
-                        or (math.abs(position.X.Offset - scaledDefault.X.Offset) < 2 and math.abs(position.Y.Offset - scaledDefault.Y.Offset) < 2)) or false
+        local actions = {
+            { key = "DROP_BR",      text = "DROP\nBR",      fn = function()
+                pcall(function()
+                    if dropBrainrot then dropBrainrot()
+                    elseif DropBrainrot then DropBrainrot() end
+                end)
+            end },
+            { key = "AUTO_LEFT",    text = "AUTO\nLEFT",    fn = function()
+                State.autoLeftEnabled = not State.autoLeftEnabled
+                if State.autoLeftEnabled then
+                    pcall(function()
+                        if startAutoLeft then startAutoLeft()
+                        elseif queueAutoLeftStart then queueAutoLeftStart() end
+                    end)
+                else
+                    pcall(function() if stopAutoLeft then stopAutoLeft() end end)
                 end
-                if entry.autoPlaced then position = scaledDefault end
-                local x = math.clamp(position.X.Offset, 4, math.max(4, view.X - width - 4))
-                local y = math.clamp(position.Y.Offset, 4, math.max(4, view.Y - width - 4))
-                UI.animate(entry.frame, {Size = UDim2.fromOffset(width, width), Position = UDim2.fromOffset(x, y)}, 0.28)
-                local textSize = math.max(9, math.floor(width / 5.2))
-                UI.animate(entry.topLbl, {TextSize = textSize}, 0.28)
-                UI.animate(entry.botLbl, {TextSize = textSize}, 0.28)
-            end
-            if save then safeWriteFile("k2MobScaleFactor.txt", tostring(factor)) end
-            Layout.refresh()
-        end
-        Layout.applyMobile(Layout.mobileFactor, false)
-    end
+            end },
+            { key = "BAT_AIMBOT",   text = "BAT\nAIMBOT",   fn = function()
+                State.autoBatEnabled = not State.autoBatEnabled
+                if State.autoBatEnabled then
+                    pcall(function() if queueAutoBatStart then queueAutoBatStart() end end)
+                else
+                    pcall(function() if disableAutoBat then disableAutoBat() end end)
+                end
+                saveConfig()
+            end },
+            { key = "AUTO_RIGHT",   text = "AUTO\nRIGHT",   fn = function()
+                State.autoRightEnabled = not State.autoRightEnabled
+                if State.autoRightEnabled then
+                    pcall(function()
+                        if startAutoRight then startAutoRight()
+                        elseif queueAutoRightStart then queueAutoRightStart() end
+                    end)
+                else
+                    pcall(function() if stopAutoRight then stopAutoRight() end end)
+                end
+            end },
+            { key = "TP_DOWN",      text = "TP\nDOWN",      fn = function()
+                pcall(function()
+                    if tpFloor then tpFloor()
+                    elseif TPDown then TPDown() end
+                end)
+            end },
+            { key = "CARRY_SPD",    text = "CARRY\nSPD",    fn = function()
+                toggleCarryMode()
+                saveConfig()
+            end },
+            { key = "LAGGER_CARRY", text = "LAGGER\nCARRY", fn = function()
+                toggleLaggerMode()
+                saveConfig()
+            end },
+            { key = "LAGGER_MODE",  text = "LAGGER\nMODE",  fn = function()
+                toggleLaggerMode()
+                saveConfig()
+            end },
+            { key = "TP_BAT",       text = "TP\nBAT",       fn = function()
+                State.tpBatEnabled = not State.tpBatEnabled
+                pcall(function()
+                    if TpBat and TpBat.toggle then TpBat.toggle()
+                    elseif TpBat and TpBat.setEnabled then TpBat.setEnabled(State.tpBatEnabled) end
+                end)
+                saveConfig()
+            end },
+            { key = "INSTA_RESET",  text = "INSTA\nRESET",  fn = function()
+                pcall(function()
+                    if InstantReset and InstantReset.reset then InstantReset.reset() end
+                end)
+            end },
+        }
 
-    resetMobilePositions = function()
-        for _, entry in ipairs(mbBtnFrames) do
-            entry.autoPlaced = true
-            local destination = Layout.defaultMobilePosition(entry.key, Layout.mobileFactor)
-            UI.animate(entry.frame, {Position = destination}, 0.24)
-            safeWriteFile("k2MB_" .. entry.key .. ".txt", tostring(destination.X.Offset) .. "," .. tostring(destination.Y.Offset))
+        for idx, item in ipairs(actions) do
+            local col = (idx - 1) % cols
+            local row = math.floor((idx - 1) / cols)
+            local x = startX + col * (btnSize + gap)
+            local y = startY + row * (btnSize + gap)
+            makeCircleButton(gui, item.key, item.text, x, y, item.fn)
         end
     end
+    buildQuickButtons()
 
-    -- ============================================================
-    -- TWO GREY SKINS, shared by Normal V1, Normal V2 and instant SEMI.
+    -- Visual stubs for systems that call set*Visual from combat loops
+    autoLeftSetVisual = function() end
+    autoRightSetVisual = function() end
+    setAutoBatVisual = function() end
+    setAutoGrabVisual = function() end
+    setAutoSwitchSpeedVisual = function() end
+
+
+    -- Auto-grab progress skins (kept from M10RU)
+    -- TWO PURPLE SKINS, shared by Normal V1, Normal V2 and instant SEMI.
     -- No floating names, RAD fields, or ON/OFF buttons; skin 2 has its readiness state.
     -- Shape 1: slim rail + percentage. Shape 2: rounded full-width fill.
     -- ============================================================
     do
-        local P = Grab.grey
+        local P = Grab.purple
         local function corner(object, radius)
             Instance.new("UICorner", object).CornerRadius = UDim.new(0, radius)
         end
@@ -8677,11 +7172,11 @@ local function buildGui()
         -- (The progress fill is clipped by its own rail, so nothing spills.)
         two.frame.ClipsDescendants = false
         two.frame.BackgroundColor3 = Color3.fromRGB(12, 11, 24)
-        two.stroke.Color = Color3.fromRGB(139, 92, 246)
+        two.stroke.Color = Color3.fromRGB(40, 40, 48)
         two.stroke.Thickness = 1.5
         two.stroke.Transparency = 0
         -- Racing light: a bright violet comet chases around the card border
-        -- while the rest of the edge stays a dim grey.
+        -- while the rest of the edge stays a dim purple.
         two.outlineGradient = gradient(two.stroke, Color3.fromRGB(58, 22, 112), Color3.fromRGB(58, 22, 112))
         two.outlineGradient.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0.00, Color3.fromRGB(58, 22, 112)),
@@ -8706,7 +7201,7 @@ local function buildGui()
         two.track.ZIndex = 11
         corner(two.track, LINE_R)
         local lineStroke = Instance.new("UIStroke", two.track)
-        lineStroke.Color = Color3.fromRGB(139, 92, 246)
+        lineStroke.Color = Color3.fromRGB(40, 40, 48)
         lineStroke.Thickness = 1
         lineStroke.Transparency = 0.5
         two.fill = Instance.new("Frame", two.track)
@@ -8736,7 +7231,7 @@ local function buildGui()
         two.avatar.ZIndex = 14
         corner(two.avatar, 13)
         local avatarStroke = Instance.new("UIStroke", two.avatar)
-        avatarStroke.Color = Color3.fromRGB(139, 92, 246)
+        avatarStroke.Color = Color3.fromRGB(40, 40, 48)
         avatarStroke.Thickness = 1.5
         avatarStroke.Transparency = 0.15
         task.spawn(function()
@@ -8754,7 +7249,7 @@ local function buildGui()
         two.accent.Name = "Accent"
         two.accent.Size = UDim2.fromOffset(3, 34)
         two.accent.Position = UDim2.fromOffset(4, 12)
-        two.accent.BackgroundColor3 = Color3.fromRGB(139, 92, 246)
+        two.accent.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
         two.accent.BorderSizePixel = 0
         two.accent.ZIndex = 13
         corner(two.accent, 2)
@@ -8826,7 +7321,7 @@ local function buildGui()
         statsPlate.ZIndex = 13
         corner(statsPlate, 9)
         local statsStroke = Instance.new("UIStroke", statsPlate)
-        statsStroke.Color = Color3.fromRGB(139, 92, 246)
+        statsStroke.Color = Color3.fromRGB(40, 40, 48)
         statsStroke.Transparency = 0.10
         statsStroke.Thickness = 1
         two.stats = Instance.new("TextLabel", statsPlate)
@@ -8865,7 +7360,7 @@ local function buildGui()
         -- the Auto Grab card itself is scaled further down.
         linkScale.Scale = math.max(Grab.getScale(), 0.9)
         local linkStroke = Instance.new("UIStroke", linkPlate)
-        linkStroke.Color = Color3.fromRGB(139, 92, 246)
+        linkStroke.Color = Color3.fromRGB(40, 40, 48)
         linkStroke.Thickness = 1.2
         linkStroke.Transparency = 0.15
         local linkButton = Instance.new("TextButton", linkPlate)
@@ -8875,7 +7370,7 @@ local function buildGui()
         linkButton.BorderSizePixel = 0
         linkButton.AutoButtonColor = false
         linkButton.Text = GRAB_LINK
-        linkButton.TextColor3 = Color3.fromRGB(235, 238, 245)
+        linkButton.TextColor3 = Color3.fromRGB(245, 245, 250)
         linkButton.Font = Enum.Font.GothamBold
         linkButton.TextSize = 11
         linkButton.TextXAlignment = Enum.TextXAlignment.Center
@@ -8946,7 +7441,7 @@ local function buildGui()
                 UI.text(two.status, statusWord)
                 UI.animate(two.counter, {TextColor3 = bright and Color3.fromRGB(226, 216, 255) or P.text}, 0.16)
                 UI.animate(two.status, {TextColor3 = bright and Color3.fromRGB(226, 216, 255) or Color3.fromRGB(167, 139, 250)}, 0.16)
-                UI.animate(two.accent, {BackgroundColor3 = bright and P.light or Color3.fromRGB(139, 92, 246)}, 0.16)
+                UI.animate(two.accent, {BackgroundColor3 = bright and P.light or Color3.fromRGB(40, 40, 48)}, 0.16)
                 two.outlineGradient.Rotation = (two.outlineGradient.Rotation + dt * 135) % 360
                 two.fillGradient.Offset = Vector2.new(math.sin(os.clock() * 1.8) * 0.15, 0)
                 -- Real render FPS: count frames over a quarter-second window
@@ -8980,109 +7475,8 @@ local function buildGui()
         table.insert(Grab.connections, gui.Destroying:Connect(Grab.destroy))
         Grab.refresh()
     end
-    -- Sticky category navigation. Only the selected section is shown. SPEED is
-    -- selected at launch so the sections never pile up in one long view.
-    do
-        -- Top Category Bar: Positioned prominently at the top below the header logo
-        local categoryBar = Instance.new("Frame", main)
-        categoryBar.Name = "StickyCategoryBar"
-        categoryBar.Size = UDim2.new(1, -16, 0, 32)
-        categoryBar.Position = UDim2.new(0, 8, 0, 74)
-        categoryBar.BackgroundColor3 = UI.theme.panel
-        categoryBar.BorderSizePixel = 0
-        categoryBar.ZIndex = 30
-        Instance.new("UICorner", categoryBar).CornerRadius = UDim.new(0, 8)
-        local catBarStroke = Instance.new("UIStroke", categoryBar)
-        catBarStroke.Color = UI.theme.border
-        catBarStroke.Thickness = 1
-        catBarStroke.Transparency = 0.5
-
-        local categories = {"SPEED", "COMBAT", "VISUAL", "MISC", "KEYBINDS"}
-        local categoryButtons = {}
-        local layout = Instance.new("UIListLayout", categoryBar)
-        layout.FillDirection = Enum.FillDirection.Horizontal
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        layout.VerticalAlignment = Enum.VerticalAlignment.Center
-        layout.Padding = UDim.new(0, 3)
-
-        local pad = Instance.new("UIPadding", categoryBar)
-        pad.PaddingLeft = UDim.new(0, 3)
-        pad.PaddingRight = UDim.new(0, 3)
-        pad.PaddingTop = UDim.new(0, 2)
-        pad.PaddingBottom = UDim.new(0, 2)
-
-        local function selectCategory(target)
-            local ref = sectionRefs[target]
-            if not ref then return end
-            UI.activeSection = target
-            local startOrder = ref.LayoutOrder
-            local nextOrder = math.huge
-            for _, other in ipairs(sf:GetChildren()) do
-                if other:IsA("GuiObject") and other:GetAttribute("K2Section") == true
-                    and other.LayoutOrder > startOrder then
-                    nextOrder = math.min(nextOrder, other.LayoutOrder)
-                end
-            end
-            for _, child in ipairs(sf:GetChildren()) do
-                if child:IsA("GuiObject") then
-                    local order = child.LayoutOrder
-                    local visible = order >= startOrder and order < nextOrder
-                    local manuallyVisible = child:GetAttribute("K2ManualVisible")
-                    if manuallyVisible ~= nil then visible = visible and manuallyVisible == true end
-                    child.Visible = visible
-                end
-            end
-            sf.CanvasPosition = Vector2.new(0, 0)
-
-            for category, record in pairs(categoryButtons) do
-                local selected = category == target
-                UI.animate(record.button, {
-                    BackgroundColor3 = selected and UI.theme.deep or Color3.fromRGB(0, 0, 0),
-                    BackgroundTransparency = selected and 0 or 1,
-                    TextColor3 = selected and UI.theme.text or UI.theme.muted,
-                    TextSize = selected and 11 or 10,
-                }, 0.18)
-                UI.animate(record.stroke, {
-                    Color = selected and UI.theme.accent or UI.theme.border,
-                    Thickness = selected and 1.5 or 0,
-                    Transparency = selected and 0 or 1,
-                }, 0.18)
-            end
-        end
-
-        for categoryIndex, category in ipairs(categories) do
-            local target = category
-            local b = Instance.new("TextButton", categoryBar)
-            b.Name = "Category_" .. target:gsub("%s", "")
-            b.Size = UDim2.new(1 / #categories, -3, 1, -2)
-            b.LayoutOrder = categoryIndex
-            b.BackgroundColor3 = UI.theme.button
-            b.BackgroundTransparency = 1
-            b.BorderSizePixel = 0
-            b.AutoButtonColor = false
-            b.Text = target == "KEYBINDS" and "BINDS" or target:sub(1, 4)
-            b.TextColor3 = UI.theme.muted
-            b.Font = Enum.Font.GothamBold
-            b.TextSize = 10
-            b.ZIndex = 31
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-            local st = Instance.new("UIStroke", b)
-            st.Color = UI.theme.border
-            st.Thickness = 0
-            st.Transparency = 1
-            categoryButtons[target] = {button = b, stroke = st}
-            b.Activated:Connect(function()
-                selectCategory(target)
-            end)
-        end
-
-        -- Initial state: open directly on SPEED, never on every section at once.
-        selectCategory("SPEED")
-    end
-
-    UI.ready = true
-
+    -- 
+UI.ready = true
 end
 
 -- ========================================================================
@@ -9283,7 +7677,7 @@ local function loadConfigState()
 end
 
 -- ========================================================================
--- INTRO SCREEN - BLACK SPACE / FLYING STARS / GREY "K2 DUELS" + CHARGE LINE
+-- INTRO SCREEN - BLACK SPACE / FLYING STARS / PURPLE "K2 DUELS" + CHARGE LINE
 -- ========================================================================
 local function playK2Intro()
     if not State.introEnabled then return end
@@ -9298,10 +7692,10 @@ local function playK2Intro()
     protectGuiObject(screenGui)
     screenGui.Parent = parent
 
-    local GREY_ACCENT = UI.theme.accent
-    local GREY_DEEP   = Color3.fromRGB(50, 54, 64)
-    local GREY_LIGHT  = UI.theme.light
-    local GREY_FILL   = Color3.fromRGB(210, 216, 230)
+    local PURPLE_ACCENT = UI.theme.accent
+    local PURPLE_DEEP   = Color3.fromRGB(40, 40, 48)
+    local PURPLE_LIGHT  = UI.theme.light
+    local PURPLE_FILL   = Color3.fromRGB(200, 200, 210)
 
     local rng = Random.new(os.clock() * 9973)
 
@@ -9337,7 +7731,7 @@ local function playK2Intro()
     content.Parent = screenGui
 
     -- --------------------------------------------------------------------
-    -- GREY NEBULA GLOW (built from frames, no external assets)
+    -- PURPLE NEBULA GLOW (built from frames, no external assets)
     -- --------------------------------------------------------------------
     for index = 1, 3 do
         local blob = Instance.new("Frame")
@@ -9346,7 +7740,7 @@ local function playK2Intro()
         blob.Position = UDim2.fromScale(0.16 + index * 0.26, 0.2 + (index % 2) * 0.55)
         blob.Size = UDim2.fromScale(0.64, 0.64)
         blob.Rotation = index * 26
-        blob.BackgroundColor3 = index == 2 and GREY_DEEP or GREY_ACCENT
+        blob.BackgroundColor3 = index == 2 and PURPLE_DEEP or PURPLE_ACCENT
         blob.BackgroundTransparency = 0.9
         blob.BorderSizePixel = 0
         blob.ZIndex = 2
@@ -9362,7 +7756,7 @@ local function playK2Intro()
     end
 
     -- --------------------------------------------------------------------
-    -- FLYING STARFIELD: small white stars with a grey hue
+    -- FLYING STARFIELD: small white stars with a purple hue
     -- --------------------------------------------------------------------
     local starLayer = Instance.new("Frame")
     starLayer.Name = "StarField"
@@ -9383,12 +7777,12 @@ local function playK2Intro()
         star.ZIndex = 3
         Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
 
-        -- Mostly pure white stars, with a grey minority for the grey space.
+        -- Mostly pure white stars, with a purple minority for the purple space.
         local roll = rng:NextNumber()
         if roll > 0.84 then
-            star.BackgroundColor3 = GREY_LIGHT
+            star.BackgroundColor3 = PURPLE_LIGHT
         elseif roll > 0.68 then
-            star.BackgroundColor3 = GREY_FILL
+            star.BackgroundColor3 = PURPLE_FILL
         else
             star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         end
@@ -9419,7 +7813,7 @@ local function playK2Intro()
         local streak = Instance.new("Frame")
         streak.Name = "Streak" .. index
         streak.AnchorPoint = Vector2.new(0.5, 0.5)
-        streak.BackgroundColor3 = GREY_LIGHT
+        streak.BackgroundColor3 = PURPLE_LIGHT
         streak.BackgroundTransparency = 0.3
         streak.BorderSizePixel = 0
         streak.Rotation = 18
@@ -9485,7 +7879,7 @@ local function playK2Intro()
     end)
 
     -- --------------------------------------------------------------------
-    -- TITLE: "K2 Duels" in grey
+    -- TITLE: "K2 Duels" in purple
     -- --------------------------------------------------------------------
     local titleHolder = Instance.new("Frame")
     titleHolder.Name = "TitleHolder"
@@ -9503,11 +7897,11 @@ local function playK2Intro()
     titleGlow.Text = "K2 Duels"
     titleGlow.Font = Enum.Font.GothamBlack
     titleGlow.TextScaled = true
-    titleGlow.TextColor3 = GREY_DEEP
+    titleGlow.TextColor3 = PURPLE_DEEP
     titleGlow.TextTransparency = 1
     titleGlow.ZIndex = 5
     local glowStroke = Instance.new("UIStroke", titleGlow)
-    glowStroke.Color = GREY_FILL
+    glowStroke.Color = PURPLE_FILL
     glowStroke.Thickness = 2.5
     glowStroke.Transparency = 1
     titleGlow.Parent = titleHolder
@@ -9525,14 +7919,14 @@ local function playK2Intro()
     local titleGradient = Instance.new("UIGradient", title)
     titleGradient.Rotation = 90
     titleGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, GREY_LIGHT),
-        ColorSequenceKeypoint.new(0.45, GREY_FILL),
-        ColorSequenceKeypoint.new(1, GREY_ACCENT),
+        ColorSequenceKeypoint.new(0, PURPLE_LIGHT),
+        ColorSequenceKeypoint.new(0.45, PURPLE_FILL),
+        ColorSequenceKeypoint.new(1, PURPLE_ACCENT),
     })
     title.Parent = titleHolder
 
     -- --------------------------------------------------------------------
-    -- CHARGE LINE: keeps filling with grey under the word
+    -- CHARGE LINE: keeps filling with purple under the word
     -- --------------------------------------------------------------------
     local track = Instance.new("Frame")
     track.Name = "ChargeTrack"
@@ -9546,7 +7940,7 @@ local function playK2Intro()
     track.ZIndex = 6
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
     local trackStroke = Instance.new("UIStroke", track)
-    trackStroke.Color = GREY_FILL
+    trackStroke.Color = PURPLE_FILL
     trackStroke.Thickness = 1
     trackStroke.Transparency = 1
     track.Parent = content
@@ -9554,15 +7948,15 @@ local function playK2Intro()
     local fill = Instance.new("Frame")
     fill.Name = "ChargeFill"
     fill.Size = UDim2.fromScale(0, 1)
-    fill.BackgroundColor3 = GREY_ACCENT
+    fill.BackgroundColor3 = PURPLE_ACCENT
     fill.BorderSizePixel = 0
     fill.ZIndex = 7
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
     local fillGradient = Instance.new("UIGradient", fill)
     fillGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, GREY_DEEP),
-        ColorSequenceKeypoint.new(0.65, GREY_ACCENT),
-        ColorSequenceKeypoint.new(1, GREY_LIGHT),
+        ColorSequenceKeypoint.new(0, PURPLE_DEEP),
+        ColorSequenceKeypoint.new(0.65, PURPLE_ACCENT),
+        ColorSequenceKeypoint.new(1, PURPLE_LIGHT),
     })
     fill.Parent = track
 
@@ -9571,7 +7965,7 @@ local function playK2Intro()
     fillHead.AnchorPoint = Vector2.new(0.5, 0.5)
     fillHead.Position = UDim2.fromScale(0, 0.5)
     fillHead.Size = UDim2.new(0, 10, 0, 10)
-    fillHead.BackgroundColor3 = GREY_LIGHT
+    fillHead.BackgroundColor3 = PURPLE_LIGHT
     fillHead.BackgroundTransparency = 1
     fillHead.BorderSizePixel = 0
     fillHead.ZIndex = 8
@@ -9618,7 +8012,7 @@ local function playK2Intro()
 
         if finished or not screenGui.Parent then return end
 
-        -- Space fades in, then the word rises into place with a grey glow.
+        -- Space fades in, then the word rises into place with a purple glow.
         tween(content, 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {GroupTransparency = 0})
         tween(titleGlow, 0.95, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, {TextTransparency = 0.55})
         tween(glowStroke, 0.95, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, {Transparency = 0.5})
@@ -9628,7 +8022,7 @@ local function playK2Intro()
             Position = UDim2.fromScale(0.5, 0.45),
         })
 
-        -- Breathing grey glow while the intro is on screen.
+        -- Breathing purple glow while the intro is on screen.
         task.spawn(function()
             local dim = false
             while not finished and screenGui.Parent do
@@ -9643,7 +8037,7 @@ local function playK2Intro()
         task.wait(0.45)
         if finished then return end
 
-        -- The charge line appears and keeps filling with grey.
+        -- The charge line appears and keeps filling with purple.
         tween(track, 0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {BackgroundTransparency = 0})
         tween(trackStroke, 0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {Transparency = 0.35})
         tween(fillHead, 0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, {BackgroundTransparency = 0})
@@ -9733,7 +8127,7 @@ else
     if not okState then
         k2ShowBootError("loadConfigState", errState)
     elseif okKeys then
-        print("[K2 Duels] Interface loaded successfully (grey auto grab).")
+        print("[K2 Duels] Interface loaded successfully (purple auto grab).")
     else
         warn("[K2 Duels] Interface loaded, but configuration could not be fully restored. See K2BootError.")
     end
