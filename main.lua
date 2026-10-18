@@ -6472,7 +6472,7 @@ local function buildGui()
 
     local main = Instance.new("CanvasGroup", gui)
     main.Name = "K2DuelsSettings"
-    main.Size = UDim2.new(0, 310, 0, 520)
+    main.Size = UDim2.new(0, 300, 0, 480)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = BG
@@ -6508,8 +6508,8 @@ local function buildGui()
         end
         function Layout.mainSize(factor)
             local view = Layout.viewport()
-            return UDim2.fromOffset(math.min(math.floor(310 * factor + 0.5), math.max(100, view.X - 24)),
-                math.min(math.floor(520 * factor + 0.5), math.max(140, view.Y - 24)))
+            return UDim2.fromOffset(math.min(math.floor(300 * factor + 0.5), math.max(100, view.X - 24)),
+                math.min(math.floor(480 * factor + 0.5), math.max(140, view.Y - 24)))
         end
         function Layout.clampMain(position, size)
             local view = Layout.viewport()
@@ -6561,7 +6561,7 @@ local function buildGui()
     -- K2 Duels Header: outside the scrolling content.
     local uiHeader = Instance.new("Frame", main)
     uiHeader.Name = "SettingsHeader"
-    uiHeader.Size = UDim2.new(1, 0, 0, 114)
+    uiHeader.Size = UDim2.new(1, 0, 0, 68)
     uiHeader.Position = UDim2.fromOffset(0, 0)
     uiHeader.BackgroundColor3 = UI.theme.background
     uiHeader.BorderSizePixel = 0
@@ -6611,10 +6611,11 @@ local function buildGui()
     headerImage.Image = ""
     headerImage.Visible = false
     headerFallback.Visible = true
-    headerFallback.Size = UDim2.new(1, -70, 0, 52)
-    headerFallback.Position = UDim2.new(0.5, 0, 0, 32)
+    headerFallback.Size = UDim2.new(0, 120, 0, 36)
+    headerFallback.Position = UDim2.new(0.5, 0, 0, 8)
     headerFallback.AnchorPoint = Vector2.new(0.5, 0)
     headerFallback.TextXAlignment = Enum.TextXAlignment.Center
+    headerFallback.TextYAlignment = Enum.TextYAlignment.Center
 
     local K2_HEADER_PNG_BASE64 = "" -- stripped legacy art
 
@@ -6765,12 +6766,12 @@ local function buildGui()
     end
 
     local closeBtn = Instance.new("TextButton", uiHeader)
-    closeBtn.Size = UDim2.new(0, 28, 0, 28)
-    closeBtn.Position = UDim2.new(1, -38, 0, 8)
-    closeBtn.BackgroundColor3 = UI.theme.button
+    closeBtn.Size = UDim2.new(0, 26, 0, 26)
+    closeBtn.Position = UDim2.new(1, -34, 0, 10)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
     closeBtn.BorderSizePixel = 0
-    closeBtn.Text = "X"
-    closeBtn.TextColor3 = UI.theme.muted
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextSize = 12
     closeBtn.ZIndex = 26
@@ -6794,8 +6795,8 @@ local function buildGui()
 
     local sf = Instance.new("ScrollingFrame", main)
     sf.Name = "SettingsContent"
-    sf.Size = UDim2.new(1, 0, 1, -122)
-    sf.Position = UDim2.new(0, 0, 0, 120)
+    sf.Size = UDim2.new(1, 0, 1, -108)
+    sf.Position = UDim2.new(0, 0, 0, 104)
     sf.BackgroundTransparency = 1
     sf.BorderSizePixel = 0
     sf.ClipsDescendants = true
@@ -8988,12 +8989,12 @@ local function buildGui()
         -- Top Category Bar: Positioned prominently at the top below the header logo
         local categoryBar = Instance.new("Frame", main)
         categoryBar.Name = "StickyCategoryBar"
-        categoryBar.Size = UDim2.new(1, -16, 0, 32)
-        categoryBar.Position = UDim2.new(0, 8, 0, 74)
-        categoryBar.BackgroundColor3 = UI.theme.panel
+        categoryBar.Size = UDim2.new(1, -20, 0, 28)
+        categoryBar.Position = UDim2.new(0, 10, 0, 62)
+        categoryBar.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
         categoryBar.BorderSizePixel = 0
         categoryBar.ZIndex = 30
-        Instance.new("UICorner", categoryBar).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", categoryBar).CornerRadius = UDim.new(1, 0)
         local catBarStroke = Instance.new("UIStroke", categoryBar)
         catBarStroke.Color = UI.theme.border
         catBarStroke.Thickness = 1
@@ -9039,16 +9040,17 @@ local function buildGui()
 
             for category, record in pairs(categoryButtons) do
                 local selected = category == target
+                -- Screenshot: selected = soft light pill, unselected = muted text only
                 UI.animate(record.button, {
-                    BackgroundColor3 = selected and UI.theme.deep or Color3.fromRGB(0, 0, 0),
+                    BackgroundColor3 = selected and Color3.fromRGB(55, 55, 65) or Color3.fromRGB(0, 0, 0),
                     BackgroundTransparency = selected and 0 or 1,
-                    TextColor3 = selected and UI.theme.text or UI.theme.muted,
+                    TextColor3 = selected and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(140, 140, 155),
                     TextSize = selected and 11 or 10,
                 }, 0.18)
                 UI.animate(record.stroke, {
-                    Color = selected and UI.theme.accent or UI.theme.border,
-                    Thickness = selected and 1.5 or 0,
-                    Transparency = selected and 0 or 1,
+                    Color = selected and Color3.fromRGB(90, 90, 105) or UI.theme.border,
+                    Thickness = selected and 1 or 0,
+                    Transparency = selected and 0.35 or 1,
                 }, 0.18)
             end
         end
