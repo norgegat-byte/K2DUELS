@@ -1329,8 +1329,8 @@ local v14 = (function()
 	}
 
 	local STEAL_RADIUS = 61
-	local STEAL_DURATION = 1.3 -- game default hold time
-	local FIRE_AT = 0.75 -- luckbroom "75" mode — fire at 75% of duration
+	local STEAL_DURATION = 0.45 -- total hold → fire window (user wants 0.3–0.5s)
+	local FIRE_AT = 1.0 -- fire at end of STEAL_DURATION (~0.45s)
 	local Data = {}
 	local isStealing = false
 	local generation = 0
@@ -1544,25 +1544,8 @@ local v14 = (function()
 				if not stillValid() then return end
 
 				-- Optional approach window (luckbroom: wait until dist <= 9)
-				local deadline = tick() + math.max(2.99 - fireAt - math.max(STEAL_DURATION - fireAt, 0), 0.05)
-				while stillValid() do
-					local d = promptDistance(prompt)
-					if d and d <= 9 then break end
-					if tick() >= deadline then break end
-					task.wait()
-				end
-				if not stillValid() then return end
-
-				-- Fill remaining bar to 100%
-				local fillStart = tick()
-				local fillDur = math.max(STEAL_DURATION - fireAt, 0.05)
-				local stopProgress = fireAt / STEAL_DURATION
-				while stillValid() do
-					local fp = math.clamp((tick() - fillStart) / fillDur, 0, 1)
-					updateBar(stopProgress + fp * (1 - stopProgress), "STEALING")
-					if fp >= 1 then break end
-					task.wait()
-				end
+				-- Short hold path: bar already at/near 100% after fireAt
+				updateBar(1, "STEALING")
 				if not stillValid() then return end
 
 				-- FIRE
@@ -1616,7 +1599,7 @@ local v14 = (function()
 				executeSteal(prompt, podName)
 			end
 		end)
-		print("[K2 AutoSteal] started | radius", STEAL_RADIUS, "| duration", STEAL_DURATION, "| fire@", FIRE_AT)
+		print("[K2 AutoSteal] started | radius", STEAL_RADIUS, "| hold", STEAL_DURATION, "s")
 	end
 
 	local function stopLoop()
