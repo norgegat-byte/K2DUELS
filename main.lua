@@ -8,6 +8,18 @@
 
 print("[K2] Winter Edition | discord.gg/k2scripts")
 
+-- Safe FPS-cap helper (defined early so boot never calls nil)
+_G.__VX7_APPLY_FPS_CAP = _G.__VX7_APPLY_FPS_CAP or function()
+	pcall(function()
+		local setcap = (setfpscap or set_fps_cap or (syn and syn.setfpscap))
+		if type(setcap) == "function" then
+			setcap(9999)
+		end
+	end)
+end
+
+
+
 do
 	-- Obfuscated print("deobf by printed")
 	local function _obf()
@@ -125,18 +137,30 @@ task.spawn(function()
 	local tbl2 = { 0.25, 1, 3 }
 	for i, v in ipairs(tbl2) do
 		task.wait(v)
-		_G.__VX7_APPLY_FPS_CAP()
+		if type(_G.__VX7_APPLY_FPS_CAP) == "function" then
+			pcall(_G.__VX7_APPLY_FPS_CAP)
+		end
 	end
 	while _G.VX7_LOADED do
 		task.wait(15)
-		_G.__VX7_APPLY_FPS_CAP()
+		if type(_G.__VX7_APPLY_FPS_CAP) == "function" then
+			pcall(_G.__VX7_APPLY_FPS_CAP)
+		end
 	end
 end)
 pcall(function()
-	UserInputService.WindowFocused:Connect(_G.__VX7_APPLY_FPS_CAP)
+	if type(_G.__VX7_APPLY_FPS_CAP) == "function" then
+		UserInputService.WindowFocused:Connect(function()
+			pcall(_G.__VX7_APPLY_FPS_CAP)
+		end)
+	end
 end)
 localPlayer.CharacterAdded:Connect(function()
-	task.defer(_G.__VX7_APPLY_FPS_CAP)
+	task.defer(function()
+		if type(_G.__VX7_APPLY_FPS_CAP) == "function" then
+			pcall(_G.__VX7_APPLY_FPS_CAP)
+		end
+	end)
 end)
 -- Robust filesystem helpers (works across common executors)
 local function _k2Pick(...)
@@ -1119,7 +1143,7 @@ end
 local tbl17, ReplicatedStorage, plots, tbl18, tbl19, tbl20, tbl21, tbl22, tbl23 =
 	{ StealRadius = 60, StealDuration = 1.1 }, -- Adapt
 	game:GetService("ReplicatedStorage"),
-	workspace:WaitForChild("Plots"),
+	workspace:WaitForChild("Plots", 30),
 	{},
 	{},
 	{
@@ -1270,9 +1294,8 @@ function destroyAnimalHoldDetector()
 end
 local v14 = (function()
 	-- ============================================================
-	-- AUTO STEAL — M10RU Duels Y/out engine (simplified)
-	-- Single toggle. No SEMI / % / fill-time. Fixed 61 stud radius.
-	-- Fire: hold callbacks → trigger → fireproximityprompt → StealAnimal
+	-- AUTO STEAL — Adapt + Dragon hybrid (VX7)
+	-- Hold 0.35s then fire. Proximity prompts zeroed. Multi-method fire.
 	-- ============================================================
 	local autoSteal = {
 		active = false,
@@ -1304,11 +1327,36 @@ local v14 = (function()
 		end,
 	}
 
-	local STEAL_RADIUS = 61 -- M10RU locked radius
-	local Data = {} -- [prompt] = {hold, trigger, ready}
+	local STEAL_RADIUS = 65
+	local HOLD_TIME = 0.40 -- 0.3–0.5s window user requested
+	local Data = {}
 	local hb = nil
+	local zeroHb = nil
 	local busy = false
 	local epoch = 0
+
+	-- Resolve fireproximityprompt with InputHoldBegin/End fallback (Adapt)
+	local firePP = nil
+	pcall(function()
+		if type(fireproximityprompt) == "function" then firePP = fireproximityprompt end
+	end)
+	if not firePP and type(getgenv) == "function" then
+		pcall(function()
+			local g = getgenv()
+			if type(g) == "table" and type(g.fireproximityprompt) == "function" then
+				firePP = g.fireproximityprompt
+			end
+		end)
+	end
+	if type(firePP) ~= "function" then
+		firePP = function(prompt)
+			pcall(function()
+				if prompt.InputHoldBegin then prompt:InputHoldBegin() end
+				task.wait(0.05)
+				if prompt.InputHoldEnd then prompt:InputHoldEnd() end
+			end)
+		end
+	end
 
 	local function isMyPlotByName(plotName)
 		local plots = workspace:FindFirstChild("Plots")
@@ -1331,25 +1379,35 @@ local v14 = (function()
 		local plots = workspace:FindFirstChild("Plots")
 		if not root or not plots then return nil, nil end
 
-		local nearestPrompt, nearestDistance, nearestName = nil, math.huge, nil
+		local nearestPrompt, nearestDist, nearestName = nil, math.huge, nil
+		local rpos = root.Position
 		for _, plot in ipairs(plots:GetChildren()) do
-			if not isMyPlotByName(plot.Name) then
-				local podiums = plot:FindFirstChild("AnimalPodiums")
-				if podiums then
-					for _, podium in ipairs(podiums:GetChildren()) do
-						local base = podium:FindFirstChild("Base")
-						local spawn = base and base:FindFirstChild("Spawn")
-						local attachment = spawn and spawn:FindFirstChild("PromptAttachment")
-						if spawn and attachment then
-							local distance = (spawn.Position - root.Position).Magnitude
-							if distance <= STEAL_RADIUS and distance < nearestDistance then
-								for _, prompt in ipairs(attachment:GetChildren()) do
-									if prompt:IsA("ProximityPrompt") and tostring(prompt.ActionText):find("Steal") then
-										nearestPrompt, nearestDistance, nearestName = prompt, distance, podium.Name
-										break
-									end
-								end
-							end
+			if isMyPlotByName(plot.Name) then continue end
+			local pods = plot:FindFirstChild("AnimalPodiums")
+			if not pods then continue end
+			for _, pod in ipairs(pods:GetChildren()) do
+				local base = pod:FindFirstChild("Base")
+				local spawn = base and base:FindFirstChild("Spawn")
+				if not spawn then continue end
+				local dist = (spawn.Position - rpos).Magnitude
+				if dist > STEAL_RADIUS or dist >= nearestDist then continue end
+				local att = spawn:FindFirstChild("PromptAttachment")
+				local searchRoot = att or spawn
+				for _, desc in ipairs(searchRoot:GetDescendants()) do
+					if desc:IsA("ProximityPrompt") then
+						local at = tostring(desc.ActionText or "")
+						if at:find("Steal") or at == "" then
+							nearestPrompt, nearestDist, nearestName = desc, dist, pod.Name
+							break
+						end
+					end
+				end
+				-- also check direct children of attachment
+				if att then
+					for _, child in ipairs(att:GetChildren()) do
+						if child:IsA("ProximityPrompt") then
+							nearestPrompt, nearestDist, nearestName = child, dist, pod.Name
+							break
 						end
 					end
 				end
@@ -1364,16 +1422,19 @@ local v14 = (function()
 		data = { hold = {}, trigger = {}, ready = true }
 		Data[prompt] = data
 		if getconnections then
-			for _, pair in ipairs({
-				{ prompt.PromptButtonHoldBegan, data.hold },
-				{ prompt.Triggered, data.trigger },
-			}) do
-				local ok, connections = pcall(getconnections, pair[1])
-				if ok and type(connections) == "table" then
-					for _, connection in ipairs(connections) do
-						if type(connection.Function) == "function" then
-							table.insert(pair[2], connection.Function)
-						end
+			local ok, conns = pcall(getconnections, prompt.PromptButtonHoldBegan)
+			if ok and type(conns) == "table" then
+				for _, c in ipairs(conns) do
+					if type(c.Function) == "function" then
+						table.insert(data.hold, c.Function)
+					end
+				end
+			end
+			ok, conns = pcall(getconnections, prompt.Triggered)
+			if ok and type(conns) == "table" then
+				for _, c in ipairs(conns) do
+					if type(c.Function) == "function" then
+						table.insert(data.trigger, c.Function)
 					end
 				end
 			end
@@ -1381,35 +1442,35 @@ local v14 = (function()
 		return data
 	end
 
-	local function dispatch(callbacks)
-		for _, fn in ipairs(callbacks) do
+	local function dispatch(list)
+		for _, fn in ipairs(list) do
 			task.spawn(function()
 				pcall(fn, localPlayer)
 			end)
 		end
 	end
 
-	local function fireSteal(prompt, podName)
-		-- M10RU fireYoutSteal
-		local data = callbacksFor(prompt)
-		dispatch(data.trigger)
+	local function burstFire(prompt, podName)
+		pcall(function() prompt.HoldDuration = 0 end)
+		-- hold path
 		pcall(function()
-			if prompt and prompt.Parent then
-				pcall(function()
-					if prompt.InputHoldEnd then prompt:InputHoldEnd() end
-				end)
-				if fireproximityprompt then
-					pcall(fireproximityprompt, prompt)
-					pcall(fireproximityprompt, prompt, 0)
-				end
-			end
-			local remote = ReplicatedStorage:FindFirstChild("StealAnimal")
-			if remote and podName then
-				pcall(function() remote:FireServer(podName) end)
-			end
-			if prompt and prompt.Fire then
-				pcall(function() prompt:Fire() end)
-			end
+			if prompt.InputHoldBegin then prompt:InputHoldBegin() end
+		end)
+		task.wait(0.04)
+		pcall(function()
+			if prompt.InputHoldEnd then prompt:InputHoldEnd() end
+		end)
+		-- proximity
+		pcall(firePP, prompt)
+		pcall(firePP, prompt, 0)
+		-- remote
+		local remote = ReplicatedStorage:FindFirstChild("StealAnimal")
+		if remote and podName then
+			pcall(function() remote:FireServer(podName) end)
+		end
+		-- prompt Fire
+		pcall(function()
+			if prompt.Fire then prompt:Fire() end
 		end)
 	end
 
@@ -1423,29 +1484,57 @@ local v14 = (function()
 		data.ready = false
 		local myEpoch = epoch
 		autoSteal.active = true
-		autoSteal.phase = "firing"
+		autoSteal.phase = "holding"
 		autoSteal.label = tostring(podName or "Animal")
 		autoSteal.startTime = tick()
 		Config.isStealing = true
 		if _G.StealBar then
 			_G.StealBar.SetState("STEALING")
-			_G.StealBar.SetProgress(1)
+			_G.StealBar.SetProgress(0)
 		end
 
 		task.spawn(function()
 			local ok, err = pcall(function()
-				-- M10RU: hold callbacks first (or InputHoldBegin fallback)
+				pcall(function() prompt.HoldDuration = 0 end)
+				pcall(function()
+					prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance or 10, STEAL_RADIUS)
+				end)
+
+				-- 1) Hold callbacks
 				dispatch(data.hold)
 				if #data.hold == 0 then
 					pcall(function()
 						if prompt.InputHoldBegin then prompt:InputHoldBegin() end
 					end)
 				end
-				pcall(function() prompt.HoldDuration = 0 end)
-				-- Instant finish (no % / duration wait)
-				task.wait(0.05)
+
+				-- 2) Hold window 0.35–0.45s with bar fill (user requested ~0.3–0.5s)
+				local t0 = tick()
+				while tick() - t0 < HOLD_TIME do
+					if epoch ~= myEpoch or not Config.autoStealEnabled then return end
+					if not prompt.Parent then return end
+					local p = math.clamp((tick() - t0) / HOLD_TIME, 0, 1)
+					autoSteal.manualProgress = p
+					if _G.StealBar then
+						_G.StealBar.SetProgress(p)
+					end
+					task.wait()
+				end
+
 				if epoch ~= myEpoch or not Config.autoStealEnabled then return end
-				fireSteal(prompt, podName)
+
+				-- 3) Trigger + multi fire
+				autoSteal.phase = "firing"
+				if _G.StealBar then
+					_G.StealBar.SetProgress(1)
+				end
+				dispatch(data.trigger)
+				burstFire(prompt, podName)
+				task.wait(0.08)
+				if epoch == myEpoch and Config.autoStealEnabled then
+					burstFire(prompt, podName)
+				end
+
 				autoSteal.totalSteals = (autoSteal.totalSteals or 0) + 1
 				autoSteal.lastResult = "Stole " .. tostring(podName)
 				autoSteal.lastResultTime = tick()
@@ -1459,7 +1548,7 @@ local v14 = (function()
 				autoSteal.failedSteals = (autoSteal.failedSteals or 0) + 1
 				warn("[K2 AutoSteal] " .. tostring(err))
 			end
-			task.wait(0.12)
+			task.wait(0.25)
 			data.ready = true
 			busy = false
 			autoSteal.active = false
@@ -1471,13 +1560,41 @@ local v14 = (function()
 		end)
 	end
 
+	-- Continuously zero HoldDuration on every steal prompt (hides long hold UI)
+	local function startZeroLoop()
+		if zeroHb then return end
+		local lastZero = 0
+		zeroHb = RunService.Heartbeat:Connect(function()
+			if not Config.autoStealEnabled then return end
+			if tick() - lastZero < 0.25 then return end
+			lastZero = tick()
+			local plots = workspace:FindFirstChild("Plots")
+			if not plots then return end
+			for _, plot in ipairs(plots:GetChildren()) do
+				local pods = plot:FindFirstChild("AnimalPodiums")
+				if not pods then continue end
+				for _, pod in ipairs(pods:GetChildren()) do
+					local base = pod:FindFirstChild("Base")
+					local spawn = base and base:FindFirstChild("Spawn")
+					local att = spawn and spawn:FindFirstChild("PromptAttachment")
+					if att then
+						for _, child in ipairs(att:GetChildren()) do
+							if child:IsA("ProximityPrompt") then
+								pcall(function() child.HoldDuration = 0 end)
+							end
+						end
+					end
+				end
+			end
+		end)
+	end
+
 	local function startLoop()
 		if hb then return end
-		-- Force radius for any leftover UI display
 		Config.stealRadius = STEAL_RADIUS
-		if type(tbl17) == "table" then
-			tbl17.StealRadius = STEAL_RADIUS
-		end
+		Config.stealFillDuration = HOLD_TIME
+		Config.autoStealEnabled = true
+		startZeroLoop()
 		hb = RunService.Heartbeat:Connect(function()
 			if not Config.autoStealEnabled or busy then return end
 			local prompt, podName = findNearestYoutPrompt()
@@ -1485,22 +1602,21 @@ local v14 = (function()
 				executeSteal(prompt, podName)
 			end
 		end)
+		print("[K2 AutoSteal] started | radius", STEAL_RADIUS, "| hold", HOLD_TIME)
 	end
 
 	local function stopLoop()
 		epoch = epoch + 1
-		if hb then
-			hb:Disconnect()
-			hb = nil
-		end
+		if hb then hb:Disconnect(); hb = nil end
+		if zeroHb then zeroHb:Disconnect(); zeroHb = nil end
 		busy = false
 		autoSteal.active = false
 		autoSteal.phase = "idle"
 		Config.isStealing = false
+		Config.autoStealEnabled = false
 		Data = {}
-		if _G.StealBar then
-			_G.StealBar.Reset()
-		end
+		if _G.StealBar then _G.StealBar.Reset() end
+		print("[K2 AutoSteal] stopped")
 	end
 
 	return {
@@ -1517,24 +1633,6 @@ local v14 = (function()
 		Telemetry = autoSteal,
 	}
 end)()
-
-
-
-
-
--- K2 radius sync: keep Config.stealRadius aligned with GUI / tbl17
-task.spawn(function()
-	while true do
-		task.wait(0.5)
-		pcall(function()
-			if type(tbl17) == "table" and tonumber(tbl17.StealRadius) then
-				Config.stealRadius = tonumber(tbl17.StealRadius)
-			elseif tonumber(Config.stealRadius) and type(tbl17) == "table" then
-				tbl17.StealRadius = tonumber(Config.stealRadius)
-			end
-		end)
-	end
-end)
 
 fn5 = function(autoStealVersion)
 	if autoStealVersion == "V1" or autoStealVersion == "V2" then
@@ -13113,8 +13211,26 @@ tbl31 = {
 					v46.Position = UDim2.new(1, -50, 0.5, -12)
 					function setAutoSteal(arg)
 						autoStealEnabled = arg
+						Config.autoStealEnabled = arg == true
 						v47(arg)
 						fn82(arg)
+						if arg then
+							pcall(function()
+								if Config.Core and Config.Core.Call then
+									Config.Core.Call("AutoSteal", "Start")
+								elseif fn5 then
+									fn5(Config.autoStealVersion or "V1")
+								end
+							end)
+						else
+							pcall(function()
+								if Config.Core and Config.Core.Call then
+									Config.Core.Call("AutoSteal", "Stop")
+								elseif fn6 then
+									fn6()
+								end
+							end)
+						end
 					end
 				end
 				do
